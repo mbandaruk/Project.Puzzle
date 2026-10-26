@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Прямоугольник</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      /*display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center; */
+      background: white;
+      color: #e8eaed;
+      font-family: system-ui, sans-serif;
+    }
+
+    canvas {
+      background: lightgray;
+      border: 1px solid #343a46;
+      touch-action: none;
+      cursor: default;
+    }
+
+    p {
+      margin: 12px 16px 0;
+      font-size: 14px;
+      opacity: 0.8;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="game" width="700" height="600"></canvas>
+  <!-- <p>Стрелки, WASD или перетаскивание мышью. На телефоне — кнопки или палец.</p> -->
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    // прямоугольник
+    const player = {
+      x: 280,
+      y: 170,
+      w: 70,
+      h: 70,
+      speed: 4,
+      color: "navy"
+    };
+
+    const info = {
+      e: null,
+      ex: 0, ey: 0,
+      eox: 0, eoy: 0,
+    }
+
+    // const keys = {};
+    const drag = { active: false, offsetX: 0, offsetY: 0 };
+
+
+
+    // old
+    function canvasPoint(e) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      return {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY
+      };
+    }
+
+    // new
+    // function canvasPoint(e) {
+    //   return {
+    //     x: e.offsetX,
+    //     y: e.offsetY
+    //   };
+    // }
+
+
+    function hitsPlayer(x, y) {
+      return x >= player.x && x <= player.x + player.w &&
+        y >= player.y && y <= player.y + player.h;
+    }
+
+    function clampPlayer() { // ???
+      player.x = Math.max(0, Math.min(canvas.width - player.w, player.x));
+      player.y = Math.max(0, Math.min(canvas.height - player.h, player.y));
+    }
+
+    canvas.addEventListener("pointerdown", (e) => {
+      const p = canvasPoint(e);
+      if (!hitsPlayer(p.x, p.y)) return;
+      drag.active = true;
+      drag.offsetX = p.x - player.x;
+      drag.offsetY = p.y - player.y;
+      canvas.setPointerCapture(e.pointerId); // захват курсора
+      canvas.style.cursor = "grabbing";
+    });
+
+    canvas.addEventListener("pointermove", (e) => {
+      info.e = e;
+      info.ex = e.x;
+      info.ey = e.y;
+      info.eox = e.offsetX;
+      info.eoy = e.offsetY;
+
+      const p = canvasPoint(e);
+
+      if (drag.active) {
+        player.x = p.x - drag.offsetX;
+        player.y = p.y - drag.offsetY;
+        clampPlayer();
+        return;
+      }
+      canvas.style.cursor = hitsPlayer(p.x, p.y) ? "grab" : "default";
+    });
+
+    function endDrag(e) {
+      drag.active = false;
+      canvas.style.cursor = "default";
+
+      // Отпускаем захват ?
+      canvas.releasePointerCapture(e.pointerId);
+    }
+
+    canvas.addEventListener("pointerup", (e) => {
+      // console.log("pointerup");
+      endDrag(e);
+    });
+
+    canvas.addEventListener("pointercancel", (e) => {
+      // console.log("pointerup");
+      endDrag(e);
+    });
+
+    canvas.addEventListener("pointerleave", (e) => {
+      // console.log("pointerleave");
+    });
+
+
+    // window.addEventListener("keydown", (e) => {
+    //   keys[e.key.toLowerCase()] = true;
+    //   if (["arrowup", "arrowdown", "arrowleft", "arrowright", " "].includes(e.key.toLowerCase())) {
+    //     e.preventDefault();
+    //   }
+    // });
+    // window.addEventListener("keyup", (e) => {
+    //   keys[e.key.toLowerCase()] = false;
+    // });
+
+    function update() {
+      if (drag.active) return;
+
+      //console.log("update");
+
+      //   let dx = 0;
+      //   let dy = 0;
+      //   if (keys["arrowleft"] || keys["a"]) dx -= 1;
+      //   if (keys["arrowright"] || keys["d"]) dx += 1;
+      //   if (keys["arrowup"] || keys["w"]) dy -= 1;
+      //   if (keys["arrowdown"] || keys["s"]) dy += 1;
+
+      //   // По диагонали скорость не выше, чем по прямой
+      //   if (dx !== 0 && dy !== 0) {
+      //     dx *= Math.SQRT1_2;
+      //     dy *= Math.SQRT1_2;
+      //   }
+
+      //   player.x += dx * player.speed;
+      //   player.y += dy * player.speed;
+      //   clampPlayer();
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = player.color;
+      ctx.fillRect(player.x, player.y, player.w, player.h);
+
+      // debug info
+      ctx.font = "12px courier new";
+      //ctx.fillText(`e= ${info.ex} ${info.ey}`, 5, 10);
+
+      if (info.e != null) {
+        ctx.fillText(`e.client= ${info.e.clientX} ${info.e.clientY}`, 5, 20);
+
+        // ctx.fillText(`e.offset= ${info.eox} ${info.eoy}`, 5, 20);
+      }
+      ctx.fillText(`canvas= ${canvas.x} ${canvas.y} ${canvas.width} ${canvas.height}`, 5, 30);
+      const rect = canvas.getBoundingClientRect();
+      ctx.fillText(`canvas bounding rect= ${rect.x} ${rect.y} ${rect.width} ${rect.height}`, 5, 40);
+      ctx.fillText(drag.active ? 'drag' : '', 5, 50);
+    }
+
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    // // Кнопки для телефона
+    // const pad = document.createElement("div");
+    // pad.style.cssText = "display:grid;grid-template-columns:64px 64px 64px;gap:8px;margin-top:16px;";
+    // const buttons = [
+    //   ["", ""], ["▲", "arrowup"], ["", ""],
+    //   ["◀", "arrowleft"], ["▼", "arrowdown"], ["▶", "arrowright"]
+    // ];
+    // for (const [label, key] of buttons) {
+    //   const b = document.createElement("button");
+    //   b.textContent = label;
+    //   b.style.cssText = "height:56px;font-size:20px;border:0;border-radius:8px;background:#2a3140;color:#fff;";
+    //   if (!key) b.style.visibility = "hidden";
+    //   const down = (e) => { e.preventDefault(); keys[key] = true; };
+    //   const up = (e) => { e.preventDefault(); keys[key] = false; };
+    //   b.addEventListener("pointerdown", down);
+    //   b.addEventListener("pointerup", up);
+    //   b.addEventListener("pointerleave", up);
+    //   pad.appendChild(b);
+    // }
+    // document.body.appendChild(pad);
+
+    loop();
+  </script>
+</body>
+
+</html>
