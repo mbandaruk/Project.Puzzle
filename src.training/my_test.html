@@ -165,27 +165,6 @@
       requestAnimationFrame(loop);
     }
 
-    // // Кнопки для телефона
-    // const pad = document.createElement("div");
-    // pad.style.cssText = "display:grid;grid-template-columns:64px 64px 64px;gap:8px;margin-top:16px;";
-    // const buttons = [
-    //   ["", ""], ["▲", "arrowup"], ["", ""],
-    //   ["◀", "arrowleft"], ["▼", "arrowdown"], ["▶", "arrowright"]
-    // ];
-    // for (const [label, key] of buttons) {
-    //   const b = document.createElement("button");
-    //   b.textContent = label;
-    //   b.style.cssText = "height:56px;font-size:20px;border:0;border-radius:8px;background:#2a3140;color:#fff;";
-    //   if (!key) b.style.visibility = "hidden";
-    //   const down = (e) => { e.preventDefault(); keys[key] = true; };
-    //   const up = (e) => { e.preventDefault(); keys[key] = false; };
-    //   b.addEventListener("pointerdown", down);
-    //   b.addEventListener("pointerup", up);
-    //   b.addEventListener("pointerleave", up);
-    //   pad.appendChild(b);
-    // }
-    // document.body.appendChild(pad);
-
     loop();
   </script>
 </body>
