@@ -42,15 +42,22 @@
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
 
+    class Box {
+      x = 280;
+      y = 170;
+      w = 70;
+      h = 70;
+      color = "navy";
+
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+      }
+    }
+
     // прямоугольник
-    const player = {
-      x: 280,
-      y: 170,
-      w: 70,
-      h: 70,
-      speed: 4,
-      color: "navy"
-    };
+    const player = new Box(280, 170, "navy")
 
     const info = {
       e: null,
@@ -60,7 +67,7 @@
 
     const drag = { active: false, offsetX: 0, offsetY: 0 };
 
-    // old
+    
     function canvasPoint(e) {
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
@@ -70,14 +77,6 @@
         y: (e.clientY - rect.top) * scaleY
       };
     }
-
-    // new
-    // function canvasPoint(e) {
-    //   return {
-    //     x: e.offsetX,
-    //     y: e.offsetY
-    //   };
-    // }
 
 
     function hitsPlayer(x, y) {
