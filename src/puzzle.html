@@ -36,7 +36,6 @@
 
 <body>
   <canvas id="game" width="700" height="600"></canvas>
-  <!-- <p>Стрелки, WASD или перетаскивание мышью. На телефоне — кнопки или палец.</p> -->
 
   <script>
     const canvas = document.getElementById("game");
@@ -67,7 +66,7 @@
 
     const drag = { active: false, offsetX: 0, offsetY: 0 };
 
-    
+
     function canvasPoint(e) {
       const rect = canvas.getBoundingClientRect();
       const scaleX = canvas.width / rect.width;
@@ -144,13 +143,12 @@
       ctx.fillStyle = player.color;
       ctx.fillRect(player.x, player.y, player.w, player.h);
 
-      // debug info
+
+      // debug info:
       ctx.font = "12px courier new";
       //ctx.fillText(`e= ${info.ex} ${info.ey}`, 5, 10);
-
       if (info.e != null) {
         ctx.fillText(`e.client= ${info.e.clientX} ${info.e.clientY}`, 5, 20);
-
         // ctx.fillText(`e.offset= ${info.eox} ${info.eoy}`, 5, 20);
       }
       ctx.fillText(`canvas= ${canvas.x} ${canvas.y} ${canvas.width} ${canvas.height}`, 5, 30);
