@@ -142,8 +142,9 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.fillStyle = player.color;
       ctx.fillRect(player.x, player.y, player.w, player.h);
+    }
 
-
+    function drawInfo() {
       // debug info:
       ctx.font = "12px courier new";
       //ctx.fillText(`e= ${info.ex} ${info.ey}`, 5, 10);
@@ -159,6 +160,7 @@
 
     function loop() {
       draw();
+      drawInfo();
       requestAnimationFrame(loop);
     }
 
