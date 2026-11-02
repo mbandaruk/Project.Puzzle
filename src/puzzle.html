@@ -177,12 +177,14 @@
       ctx.fillStyle = player.color;
       ctx.fillRect(player.x, player.y, player.w, player.h);
 
-      // ok
+            // ok
       for (let box of boxes) {
         ctx.fillStyle = box.color;
         ctx.fillRect(box.x, box.y, box.w, box.h);
       }
+    }
 
+    function drawInfo() {
       // debug info:
       ctx.fillStyle = "black";
       ctx.font = "12px courier new";
@@ -213,10 +215,10 @@
       ctx.fillText(`canvas bounding rect= ${rect.x} ${rect.y} ${rect.width} ${rect.height}`, 5, 40);
       ctx.fillText(drag.active ? 'drag' : '', 5, 50);
     }
-   
 
     function loop() {
       draw();
+      drawInfo();
       requestAnimationFrame(loop);
     }
 
