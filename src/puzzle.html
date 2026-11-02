@@ -9,10 +9,10 @@
     body {
       margin: 0;
       min-height: 100vh;
-      /*display: flex;
+      display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center; */
+      justify-content: center;
       background: white;
       color: #e8eaed;
       font-family: system-ui, sans-serif;
@@ -58,6 +58,13 @@
     // прямоугольник
     const player = new Box(280, 170, "navy")
 
+
+    const boxes = [
+      new Box(280, 300, "red"),
+      new Box(380, 300, "green"),
+    ];
+
+
     const info = {
       e: null,
       ex: 0, ey: 0,
@@ -83,6 +90,20 @@
         y >= player.y && y <= player.y + player.h;
     }
 
+    function hitsBox(x, y) {
+      for (let box of boxes) {
+        if (x >= player.x && x <= player.x + player.w &&
+          y >= player.y && y <= player.y + player.h) {
+          return box;
+        }
+        return null;
+      }
+
+      // return x >= player.x && x <= player.x + player.w &&
+      //   y >= player.y && y <= player.y + player.h;
+    }
+
+
     function clampPlayer() { // ???
       player.x = Math.max(0, Math.min(canvas.width - player.w, player.x));
       player.y = Math.max(0, Math.min(canvas.height - player.h, player.y));
@@ -90,15 +111,20 @@
 
     canvas.addEventListener("pointerdown", (e) => {
       const p = canvasPoint(e);
-      if (!hitsPlayer(p.x, p.y)) return;
-      drag.active = true;
-      drag.offsetX = p.x - player.x;
-      drag.offsetY = p.y - player.y;
-      canvas.setPointerCapture(e.pointerId); // захват курсора
-      canvas.style.cursor = "grabbing";
+      // if (!hitsPlayer(p.x, p.y)) return;
+      // drag.active = true;
+      // drag.offsetX = p.x - player.x;
+      // drag.offsetY = p.y - player.y;
+      // canvas.setPointerCapture(e.pointerId); // захват курсора
+      // canvas.style.cursor = "grabbing";
+
+      var box = hitsBox(p.x, p.y);
+
+
     });
 
     canvas.addEventListener("pointermove", (e) => {
+      // debug:
       info.e = e;
       info.ex = e.x;
       info.ey = e.y;
@@ -113,7 +139,13 @@
         clampPlayer();
         return;
       }
+
+      // obsolete:
       canvas.style.cursor = hitsPlayer(p.x, p.y) ? "grab" : "default";
+
+      // new:
+      // let box = hitsBox(p.x, p.y);
+      // canvas.style.cursor = box == null ? "grab" : "default";
     });
 
     function endDrag(e) {
@@ -140,22 +172,48 @@
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // obsolete
       ctx.fillStyle = player.color;
       ctx.fillRect(player.x, player.y, player.w, player.h);
 
+      // ok
+      for (let box of boxes) {
+        ctx.fillStyle = box.color;
+        ctx.fillRect(box.x, box.y, box.w, box.h);
+      }
 
       // debug info:
+      ctx.fillStyle = "black";
       ctx.font = "12px courier new";
       //ctx.fillText(`e= ${info.ex} ${info.ey}`, 5, 10);
       if (info.e != null) {
         ctx.fillText(`e.client= ${info.e.clientX} ${info.e.clientY}`, 5, 20);
         // ctx.fillText(`e.offset= ${info.eox} ${info.eoy}`, 5, 20);
+
+        const p = canvasPoint(info.e);
+
+        // if (drag.active) {
+        //   player.x = p.x - drag.offsetX;
+        //   player.y = p.y - drag.offsetY;
+        //   clampPlayer();
+        //   return;
+        // }
+
+        // // obsolete:
+        // canvas.style.cursor = hitsPlayer(p.x, p.y) ? "grab" : "default";
+
+        // // new:
+        // let box = hitsBox(p.x, p.y);
+        // canvas.style.cursor = box == null ? "grab" : "default";
+
       }
       ctx.fillText(`canvas= ${canvas.x} ${canvas.y} ${canvas.width} ${canvas.height}`, 5, 30);
       const rect = canvas.getBoundingClientRect();
       ctx.fillText(`canvas bounding rect= ${rect.x} ${rect.y} ${rect.width} ${rect.height}`, 5, 40);
       ctx.fillText(drag.active ? 'drag' : '', 5, 50);
     }
+   
 
     function loop() {
       draw();
