@@ -181,6 +181,7 @@
         ctx.fillText(`e.client= ${info.e.clientX} ${info.e.clientY}`, 5, y += 10);
 
         const p = canvasPoint(info.e);
+        ctx.fillText(`p= ${p.x} ${p.y}`, 5, y += 10);
 
         let box = hitsBox(p.x, p.y);
         if (box != null) {
