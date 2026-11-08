@@ -35,7 +35,7 @@
 </head>
 
 <body>
-  <canvas id="game" width="1000" height="800"></canvas>
+  <canvas id="game" width="1400" height="800"></canvas>
 
   <script>
     function loadImage(url) {
@@ -124,10 +124,10 @@
 
     // треугольники (фигуры)
     const items = [
-      new Item(100, 100, 't'),
-      new Item(200, 200, 'b'),
-      new Item(300, 200, 'l'),
-      new Item(400, 200, 'r'),
+      new Item(600, 100, 't'),
+      new Item(700, 200, 'b'),
+      new Item(800, 200, 'l'),
+      new Item(900, 200, 'r'),
       //new Item(500, 200),
     ];
 
@@ -139,6 +139,20 @@
     };
     const images = await loadImages(imageSources);
 
+
+
+    class Trap {
+      x; y; w; h;
+
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.w = side;
+        this.h = side;
+      }
+    }
+
+    const trap = new Trap(200, 200);
 
 
     const info = {
@@ -239,6 +253,26 @@
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      //... ловушки
+      ctx.fillStyle = "gray";
+      ctx.fillRect(trap.x, trap.y, trap.w, trap.h);
+      
+      ctx.setLineDash([10, 5]); // Задаём пунктир: 10px линия, 5px пробел
+
+      ctx.beginPath();
+      ctx.moveTo(trap.x, trap.y);
+      ctx.lineTo(trap.x + trap.w, trap.y + trap.w);
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 2;
+      ctx.stroke()
+
+      ctx.beginPath();
+      ctx.moveTo(trap.x+trap.w, trap.y);
+      ctx.lineTo(trap.x , trap.y + trap.w);
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 2;
+      ctx.stroke()
+
       for (let item of items) {
         ctx.save(); //  Сохраняем состояние
         item.MakePath();
@@ -273,15 +307,10 @@
 
         }
 
-
-
-
-
-
-
-
         ctx.restore(); // 4. Восстанавливаем состояние
       }
+
+
     }
 
     function drawInfo() {
