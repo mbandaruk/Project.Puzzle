@@ -38,61 +38,72 @@
   <canvas id="game" width="700" height="600"></canvas>
 
   <script>
+    function loadImage(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        //img.crossOrigin = 'anonymous'; // если нужно
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error(`Не удалось загрузить: ${url}`));
+        img.src = url;
+      });
+    }
+
+    async function loadImages(sources) {
+      const entries = Object.entries(sources);
+      const loaded = await Promise.all(
+        entries.map(([key, url]) =>
+          loadImage(url).then(img => [key, img])
+        )
+      );
+      return Object.fromEntries(loaded); // { bg: Image, character: Image, ... }
+    }
+
+  </script>
+
+  <script type="module">
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
-
-    // class Box {
-    //   x = 280;
-    //   y = 170;
-    //   w = 70;
-    //   h = 70;
-    //   color = "navy";
-
-    //   constructor(x, y, color) {
-    //     this.x = x;
-    //     this.y = y;
-    //     this.color = color;
-    //   }
-    // }
-
-    // const boxes = [
-    //   new Box(100, 350, "orange"),
-    //   new Box(280, 300, "red"),
-    //   new Box(380, 300, "green"),
-    // ];
-
-
-
-
 
     class Item {
       x = 0;
       y = 0;
+      w = 100;
+      h;
+      type = 't';
 
       MakePath() {
         ctx.beginPath();
         ctx.moveTo(this.x, this.y);    // верхняя вершина
-        ctx.lineTo(this.x + 40, this.y + 40);    // левая нижняя
-        ctx.lineTo(this.x + 80, this.y);   // правая нижняя
+        ctx.lineTo(this.x + this.w / 2, this.y + this.h);    // левая нижняя
+        ctx.lineTo(this.x + this.w, this.y);   // правая нижняя
         ctx.closePath();
         ctx.clip(); // применяем клип
       }
 
-      constructor(x, y) {
+      constructor(x, y, type) {
         this.x = x;
         this.y = y;
+        this.h = this.w / 2;
+        this.type = type;
       }
     }
 
+    // треугольники (фигуры)
     const items = [
-      new Item(100, 100),
-      new Item(200, 200),
-      new Item(300, 200),
-      new Item(400, 200),
-      new Item(500, 200),
+      new Item(100, 100, 't'),
+      new Item(200, 200, 'b'),
+      new Item(300, 200, 'l'),
+      new Item(400, 200, 'r'),
+      //new Item(500, 200),
     ];
 
 
+    // графика
+    const imageSources = {
+      ok1: 'img/ok1.jpg',
+      ok2: 'img/ok2.jpg',
+    };
+    const images = await loadImages(imageSources);
 
 
 
@@ -142,11 +153,11 @@
 
 
     function clamp() {
-      const box = drag.box;
-      if (box == null)
+      const item = drag.item;
+      if (item == null)
         return;
-      box.x = Math.max(0, Math.min(canvas.width - box.w, box.x));
-      box.y = Math.max(0, Math.min(canvas.height - box.h, box.y));
+      item.x = Math.max(0, Math.min(canvas.width - item.w, item.x));
+      item.y = Math.max(0, Math.min(canvas.height - item.h, item.y));
     }
 
     canvas.addEventListener("pointerdown", (e) => {
@@ -158,8 +169,8 @@
         drag.item = item;
         drag.offsetX = p.x - item.x;
         drag.offsetY = p.y - item.y;
-           canvas.setPointerCapture(e.pointerId); // захват курсора
-           canvas.style.cursor = "grabbing";
+        canvas.setPointerCapture(e.pointerId); // захват курсора
+        canvas.style.cursor = "grabbing";
       }
     });
 
@@ -171,7 +182,7 @@
       if (drag.active) {
         drag.item.x = p.x - drag.offsetX;
         drag.item.y = p.y - drag.offsetY;
-        //   clamp();
+        clamp();
         return;
       }
       let item = hitsItem(p.x, p.y);
@@ -207,10 +218,12 @@
         ctx.save(); //  Сохраняем состояние
         item.MakePath();
 
-        ctx.fillStyle = "blue";
-        ctx.fillRect(item.x, item.y, 10000, 10000);
-        // ctx.drawImage(images.ok1, 0, 0);
+        ctx.fillStyle = "blue"; // kill
+        ctx.fillRect(item.x, item.y, 10000, 10000); // kill
 
+        ctx.drawImage(images.ok1,
+          0, 0, 800, 800,
+          item.x, item.y, item.w, item.h * 2);
         ctx.restore(); // 4. Восстанавливаем состояние
       }
     }
