@@ -41,26 +41,68 @@
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
 
-    class Box {
-      x = 280;
-      y = 170;
-      w = 70;
-      h = 70;
-      color = "navy";
+    // class Box {
+    //   x = 280;
+    //   y = 170;
+    //   w = 70;
+    //   h = 70;
+    //   color = "navy";
 
-      constructor(x, y, color) {
+    //   constructor(x, y, color) {
+    //     this.x = x;
+    //     this.y = y;
+    //     this.color = color;
+    //   }
+    // }
+
+    // const boxes = [
+    //   new Box(100, 350, "orange"),
+    //   new Box(280, 300, "red"),
+    //   new Box(380, 300, "green"),
+    // ];
+
+
+
+
+
+    class Item {
+      x = 0;
+      y = 0;
+
+      MakePath() {
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y);    // верхняя вершина
+        ctx.lineTo(this.x + 40, this.y + 40);    // левая нижняя
+        ctx.lineTo(this.x + 80, this.y);   // правая нижняя
+        ctx.closePath();
+        ctx.clip(); // применяем клип
+      }
+
+      constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.color = color;
       }
     }
 
-
-    const boxes = [
-      new Box(100, 350, "orange"),
-      new Box(280, 300, "red"),
-      new Box(380, 300, "green"),
+    const items = [
+      new Item(100, 100),
+      new Item(200, 200),
+      new Item(300, 200),
+      new Item(400, 200),
+      new Item(500, 200),
     ];
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     const info = {
@@ -69,7 +111,7 @@
 
     const drag = {
       active: false,
-      box: null,
+      item: null,
       offsetX: 0,
       offsetY: 0
     };
@@ -86,15 +128,18 @@
     }
 
 
-    function hitsBox(x, y) {
-      for (let box of boxes) {
-        if (x >= box.x && x <= box.x + box.w &&
-          y >= box.y && y <= box.y + box.h) {
-          return box;
-        }
+    function hitsItem(x, y) {
+      for (let item of items) {
+        ctx.save(); //  Сохраняем состояние
+        item.MakePath();
+        const isInside = ctx.isPointInPath(x, y);
+        ctx.restore(); // Восстанавливаем состояние
+        if (isInside)
+          return item;
       }
       return null;
     }
+
 
     function clamp() {
       const box = drag.box;
@@ -107,14 +152,15 @@
     canvas.addEventListener("pointerdown", (e) => {
       const p = canvasPoint(e);
 
-      let box = hitsBox(p.x, p.y);
-      if (box == null) return;
-      drag.active = true;
-      drag.box = box;
-      drag.offsetX = p.x - box.x;
-      drag.offsetY = p.y - box.y;
-      canvas.setPointerCapture(e.pointerId); // захват курсора
-      canvas.style.cursor = "grabbing";
+      let item = hitsItem(p.x, p.y);
+      if (item != null) {
+        drag.active = true;
+        drag.item = item;
+        drag.offsetX = p.x - item.x;
+        drag.offsetY = p.y - item.y;
+           canvas.setPointerCapture(e.pointerId); // захват курсора
+           canvas.style.cursor = "grabbing";
+      }
     });
 
     canvas.addEventListener("pointermove", (e) => {
@@ -123,14 +169,13 @@
       const p = canvasPoint(e);
 
       if (drag.active) {
-        drag.box.x = p.x - drag.offsetX;
-        drag.box.y = p.y - drag.offsetY;
-        clamp();
+        drag.item.x = p.x - drag.offsetX;
+        drag.item.y = p.y - drag.offsetY;
+        //   clamp();
         return;
       }
-
-      let box = hitsBox(p.x, p.y);
-      canvas.style.cursor = box != null ? "grab" : "default";
+      let item = hitsItem(p.x, p.y);
+      canvas.style.cursor = item != null ? "grab" : "default";
     });
 
     function endDrag(e) {
@@ -158,9 +203,15 @@
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      for (let box of boxes) {
-        ctx.fillStyle = box.color;
-        ctx.fillRect(box.x, box.y, box.w, box.h);
+      for (let item of items) {
+        ctx.save(); //  Сохраняем состояние
+        item.MakePath();
+
+        ctx.fillStyle = "blue";
+        ctx.fillRect(item.x, item.y, 10000, 10000);
+        // ctx.drawImage(images.ok1, 0, 0);
+
+        ctx.restore(); // 4. Восстанавливаем состояние
       }
     }
 
@@ -183,9 +234,9 @@
         const p = canvasPoint(info.e);
         ctx.fillText(`p= ${p.x} ${p.y}`, 5, y += 10);
 
-        let box = hitsBox(p.x, p.y);
-        if (box != null) {
-          ctx.fillText(`box ${box.color}`, 5, y += 10);
+        let item = hitsItem(p.x, p.y);
+        if (item != null) {
+          ctx.fillText(`item ${item.x} ${item.y}`, 5, y += 10);
         }
       }
 
