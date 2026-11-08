@@ -199,6 +199,32 @@
       item.y = Math.max(0, Math.min(canvas.height - item.h, item.y));
     }
 
+    function calcTrap() {
+      const item = drag.item;
+      if (item == null)
+        return;
+
+      const distance = 0.1 * side;
+
+      // точка привязки
+      let point = { x: 0, y: 0 };
+
+      if (item.type == 't' || item.type == 'l') {
+        point = { x: trap.x, y: trap.y };
+      }
+      else if (item.type == 'b') {
+        point = { x: trap.x, y: trap.y + trap.h / 2 };
+      }
+      else {
+        point = { x: trap.x + trap.w / 2, y: trap.y };
+      }
+
+      if (Math.abs(point.x - item.x) < distance && Math.abs(point.y - item.y) < distance) {
+        item.x = point.x;
+        item.y = point.y;
+      }
+    }
+
     canvas.addEventListener("pointerdown", (e) => {
       const p = canvasPoint(e);
 
@@ -222,6 +248,7 @@
         drag.item.x = p.x - drag.offsetX;
         drag.item.y = p.y - drag.offsetY;
         clamp();
+        calcTrap();
         return;
       }
       let item = hitsItem(p.x, p.y);
@@ -256,7 +283,7 @@
       //... ловушки
       ctx.fillStyle = "gray";
       ctx.fillRect(trap.x, trap.y, trap.w, trap.h);
-      
+
       ctx.setLineDash([10, 5]); // Задаём пунктир: 10px линия, 5px пробел
 
       ctx.beginPath();
@@ -267,8 +294,8 @@
       ctx.stroke()
 
       ctx.beginPath();
-      ctx.moveTo(trap.x+trap.w, trap.y);
-      ctx.lineTo(trap.x , trap.y + trap.w);
+      ctx.moveTo(trap.x + trap.w, trap.y);
+      ctx.lineTo(trap.x, trap.y + trap.w);
       ctx.strokeStyle = '#000';
       ctx.lineWidth = 2;
       ctx.stroke()
@@ -343,7 +370,7 @@
 
     function loop() {
       draw();
-      drawInfo();
+      // drawInfo();
       requestAnimationFrame(loop);
     }
 
