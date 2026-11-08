@@ -4,9 +4,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Прямоугольник</title>
+  <title>Экологическая головоломка</title>
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
     body {
+      height: 100%;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    canvas {
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+      border: 1px solid #343a46;
+    }
+
+    /* body {
       margin: 0;
       min-height: 100vh;
       display: flex;
@@ -24,18 +45,12 @@
       touch-action: none;
       cursor: default;
     }
-
-    p {
-      margin: 12px 16px 0;
-      font-size: 14px;
-      opacity: 0.8;
-      text-align: center;
-    }
+ */
   </style>
 </head>
 
 <body>
-  <canvas id="game" width="1200" height="800"></canvas>
+  <canvas id="game" width="1400" height="900"></canvas>
 
   <script>
     function loadImage(url) {
@@ -64,7 +79,7 @@
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
 
-    const side = 240;
+    const side = 260;
 
     class Item {
       x = 0;
@@ -294,7 +309,7 @@
 
       //рисуем ловушки (фон + пунктир)
       for (let trap of traps) {
-        ctx.fillStyle = "gray";
+        ctx.fillStyle = "lightgray";
         ctx.fillRect(trap.x, trap.y, trap.w, trap.h);
 
         ctx.setLineDash([10, 5]); // Задаём пунктир: 10px линия, 5px пробел
@@ -394,7 +409,7 @@
 
     function loop() {
       draw();
-      // drawInfo();
+      //drawInfo();
       requestAnimationFrame(loop);
     }
 
