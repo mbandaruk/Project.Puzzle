@@ -140,7 +140,6 @@
     const images = await loadImages(imageSources);
 
 
-
     class Trap {
       x; y; w; h;
 
@@ -152,7 +151,10 @@
       }
     }
 
-    const trap = new Trap(200, 200);
+    const traps = [
+      new Trap(200, 100),
+      new Trap(500, 100),
+    ];
 
 
     const info = {
@@ -206,22 +208,25 @@
 
       const distance = 0.1 * side;
 
-      // точка привязки
-      let point = { x: 0, y: 0 };
+      for (let trap of traps) {
+        // точка привязки
+        let point = { x: 0, y: 0 };
 
-      if (item.type == 't' || item.type == 'l') {
-        point = { x: trap.x, y: trap.y };
-      }
-      else if (item.type == 'b') {
-        point = { x: trap.x, y: trap.y + trap.h / 2 };
-      }
-      else {
-        point = { x: trap.x + trap.w / 2, y: trap.y };
-      }
+        if (item.type == 't' || item.type == 'l') {
+          point = { x: trap.x, y: trap.y };
+        }
+        else if (item.type == 'b') {
+          point = { x: trap.x, y: trap.y + trap.h / 2 };
+        }
+        else {
+          point = { x: trap.x + trap.w / 2, y: trap.y };
+        }
 
-      if (Math.abs(point.x - item.x) < distance && Math.abs(point.y - item.y) < distance) {
-        item.x = point.x;
-        item.y = point.y;
+        if (Math.abs(point.x - item.x) < distance && Math.abs(point.y - item.y) < distance) {
+          item.x = point.x;
+          item.y = point.y;
+          return;
+        }
       }
     }
 
@@ -281,24 +286,26 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       //... ловушки
-      ctx.fillStyle = "gray";
-      ctx.fillRect(trap.x, trap.y, trap.w, trap.h);
+      for (let trap of traps) {
+        ctx.fillStyle = "gray";
+        ctx.fillRect(trap.x, trap.y, trap.w, trap.h);
 
-      ctx.setLineDash([10, 5]); // Задаём пунктир: 10px линия, 5px пробел
+        ctx.setLineDash([10, 5]); // Задаём пунктир: 10px линия, 5px пробел
 
-      ctx.beginPath();
-      ctx.moveTo(trap.x, trap.y);
-      ctx.lineTo(trap.x + trap.w, trap.y + trap.w);
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth = 2;
-      ctx.stroke()
+        ctx.beginPath();
+        ctx.moveTo(trap.x, trap.y);
+        ctx.lineTo(trap.x + trap.w, trap.y + trap.w);
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.stroke()
 
-      ctx.beginPath();
-      ctx.moveTo(trap.x + trap.w, trap.y);
-      ctx.lineTo(trap.x, trap.y + trap.w);
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth = 2;
-      ctx.stroke()
+        ctx.beginPath();
+        ctx.moveTo(trap.x + trap.w, trap.y);
+        ctx.lineTo(trap.x, trap.y + trap.w);
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.stroke()
+      }
 
       for (let item of items) {
         ctx.save(); //  Сохраняем состояние
