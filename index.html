@@ -181,10 +181,10 @@
       new Item(1200, 500, 4, 'l'),
       new Item(1500, 500, 4, 'r'),
 
-      new Item(600, 700, 5, 't'),
-      new Item(900, 700, 5, 'b'),
-      new Item(1200, 700, 5, 'l'),
-      new Item(1500, 700, 5, 'r'),
+      new Item(600, 600, 5, 't'),
+      new Item(900, 600, 5, 'b'),
+      new Item(1200, 600, 5, 'l'),
+      new Item(1500, 600, 5, 'r'),
     ];
 
 
@@ -225,7 +225,9 @@
 
 
     function hitsItem(x, y) {
-      for (let item of items) {
+      // поиск попадания курсором. перебор массива в обратном порядке
+      for (let i = items.length - 1; i >= 0; i--) {
+        let item = items[i];
         ctx.save(); //  Сохраняем состояние
         item.MakePath();
         const isInside = ctx.isPointInPath(x, y);
@@ -279,6 +281,13 @@
 
       let item = hitsItem(p.x, p.y);
       if (item != null) {
+        // перенос в конец массива (в ближний слой)
+        const index = items.indexOf(item);
+        if (index == -1)
+          return;
+        items.splice(index, 1);
+        items.push(item);
+
         drag.active = true;
         drag.item = item;
         drag.offsetX = p.x - item.x;
@@ -361,7 +370,7 @@
 
       ctx.stroke();
 
-      // рисуем фигуры
+      // рисуем фигуры. перебор массива в прямом порядке
       for (let item of items) {
         ctx.save(); // Сохраняем состояние
         item.MakePath();
