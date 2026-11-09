@@ -47,7 +47,7 @@
 </head>
 
 <body>
-  <canvas id="game" width="1400" height="900"></canvas>
+  <canvas id="game" width="1800" height="900"></canvas>
 
   <script>
     function loadImage(url) {
@@ -61,13 +61,7 @@
     }
 
     async function loadImages(sources) {
-      const entries = Object.entries(sources);
-      const loaded = await Promise.all(
-        entries.map(([key, url]) =>
-          loadImage(url).then(img => [key, img])
-        )
-      );
-      return Object.fromEntries(loaded); // { bg: Image, character: Image, ... }
+      return Promise.all(sources.map(url => loadImage(url)));
     }
 
   </script>
@@ -78,12 +72,36 @@
 
     const side = 280;
 
+    // графика
+    const imageSources = [
+      'img/ok0.jpg',
+      'img/ok1.jpg',
+      'img/ok2.jpg',
+      'img/ok3.jpg',
+      'img/ok4.jpg',
+      'img/ok5.jpg',
+    ];
+    const images = await loadImages(imageSources);
+
+    class Trap {
+      x; y; w; h;
+
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.w = side;
+        this.h = side;
+      }
+    }
+
     class Item {
       x = 0;
       y = 0;
       w;
       h;
+      num = 1;
       type = 't';
+      image;
 
       MakePath() {
         ctx.beginPath();
@@ -114,10 +132,12 @@
         ctx.clip(); // применяем клип
       }
 
-      constructor(x, y, type) {
+      constructor(x, y, num, type) {
         this.x = x;
         this.y = y;
+        this.num = num;
         this.type = type;
+        this.image = images[num];
         if (this.type == 't') {
           this.w = side;
           this.h = side / 2;
@@ -136,32 +156,37 @@
 
     // треугольники (фигуры)
     const items = [
-      new Item(600, 200, 't'),
-      new Item(700, 200, 'b'),
-      new Item(800, 200, 'l'),
-      new Item(900, 200, 'r'),
-      //new Item(500, 200),
+      new Item(600, 100, 0, 't'),
+      new Item(900, 100, 0, 'b'),
+      new Item(1200, 100, 0, 'l'),
+      new Item(1500, 100, 0, 'r'),
+
+      new Item(600, 200, 1, 't'),
+      new Item(900, 200, 1, 'b'),
+      new Item(1200, 200, 1, 'l'),
+      new Item(1500, 200, 1, 'r'),
+
+      new Item(600, 300, 2, 't'),
+      new Item(900, 300, 2, 'b'),
+      new Item(1200, 300, 2, 'l'),
+      new Item(1500, 300, 2, 'r'),
+
+      new Item(600, 400, 3, 't'),
+      new Item(900, 400, 3, 'b'),
+      new Item(1200, 400, 3, 'l'),
+      new Item(1500, 400, 3, 'r'),
+
+      new Item(600, 500, 4, 't'),
+      new Item(900, 500, 4, 'b'),
+      new Item(1200, 500, 4, 'l'),
+      new Item(1500, 500, 4, 'r'),
+
+      new Item(600, 700, 5, 't'),
+      new Item(900, 700, 5, 'b'),
+      new Item(1200, 700, 5, 'l'),
+      new Item(1500, 700, 5, 'r'),
     ];
 
-
-    // графика
-    const imageSources = {
-      ok1: 'img/ok1.jpg',
-      ok2: 'img/ok2.jpg',
-    };
-    const images = await loadImages(imageSources);
-
-
-    class Trap {
-      x; y; w; h;
-
-      constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.w = side;
-        this.h = side;
-      }
-    }
 
     const trapsLocation = { x: 30, y: 30 }
     const traps = [
@@ -343,22 +368,22 @@
 
         if (item.type == 't') {
           // верхний треугольник
-          ctx.drawImage(images.ok1,
+          ctx.drawImage(item.image,
             0, 0, 800, 400,
             item.x, item.y, item.w, item.h);
         } else if (item.type == 'b') {
           // нижний треугольник
-          ctx.drawImage(images.ok1,
+          ctx.drawImage(item.image,
             0, 400, 800, 400,
             item.x, item.y, item.w, item.h);
         } else if (item.type == 'l') {
           // левый треугольник
-          ctx.drawImage(images.ok1,
+          ctx.drawImage(item.image,
             0, 0, 400, 800,
             item.x, item.y, item.w, item.h);
         } else {
           // правый треугольник
-          ctx.drawImage(images.ok1,
+          ctx.drawImage(item.image,
             400, 0, 400, 800,
             item.x, item.y, item.w, item.h);
         }
