@@ -107,10 +107,7 @@
     }
 
     class Item {
-      x = 0;
-      y = 0;
-      w;
-      h;
+      x; y; w; h;
       num = 1;
       type = 't';
       image;
@@ -144,9 +141,7 @@
         ctx.clip(); // применяем клип
       }
 
-      constructor(x, y, num, type) {
-        this.x = x;
-        this.y = y;
+      constructor(num, type) {
         this.num = num;
         this.type = type;
         this.image = images[num];
@@ -168,35 +163,35 @@
 
     // треугольники (фигуры)
     const items = [
-      new Item(600, 100, 0, 't'),
-      new Item(900, 100, 0, 'b'),
-      new Item(1200, 100, 0, 'l'),
-      new Item(1500, 100, 0, 'r'),
+      new Item(0, 't'),
+      new Item(0, 'b'),
+      new Item(0, 'l'),
+      new Item(0, 'r'),
 
-      new Item(600, 200, 1, 't'),
-      new Item(900, 200, 1, 'b'),
-      new Item(1200, 200, 1, 'l'),
-      new Item(1500, 200, 1, 'r'),
+      new Item(1, 't'),
+      new Item(1, 'b'),
+      new Item(1, 'l'),
+      new Item(1, 'r'),
 
-      new Item(600, 300, 2, 't'),
-      new Item(900, 300, 2, 'b'),
-      new Item(1200, 300, 2, 'l'),
-      new Item(1500, 300, 2, 'r'),
+      new Item(2, 't'),
+      new Item(2, 'b'),
+      new Item(2, 'l'),
+      new Item(2, 'r'),
 
-      new Item(600, 400, 3, 't'),
-      new Item(900, 400, 3, 'b'),
-      new Item(1200, 400, 3, 'l'),
-      new Item(1500, 400, 3, 'r'),
+      new Item(3, 't'),
+      new Item(3, 'b'),
+      new Item(3, 'l'),
+      new Item(3, 'r'),
 
-      new Item(600, 500, 4, 't'),
-      new Item(900, 500, 4, 'b'),
-      new Item(1200, 500, 4, 'l'),
-      new Item(1500, 500, 4, 'r'),
+      new Item(4, 't'),
+      new Item(4, 'b'),
+      new Item(4, 'l'),
+      new Item(4, 'r'),
 
-      new Item(600, 600, 5, 't'),
-      new Item(900, 600, 5, 'b'),
-      new Item(1200, 600, 5, 'l'),
-      new Item(1500, 600, 5, 'r'),
+      new Item(5, 't'),
+      new Item(5, 'b'),
+      new Item(5, 'l'),
+      new Item(5, 'r'),
     ];
 
     function mixItems() { // перемешать карточки на столе
