@@ -76,12 +76,12 @@
 
     const indent = canvas.height * 0.03; // отступ от края
     const side = (canvas.height - 2 * indent) / 3; // основание треугольника
-    const cards = { x: indent, y: indent, w: 2 * side, h: 3 * side }; // разбросанные карточки
-    const desk = { // место сборки (ловушки)
-      x: cards.x + cards.w + indent,
+    const desk = { x: indent, y: indent, w: 2 * side, h: 3 * side }; // место сборки (ловушки)
+    const mixer = { // разбросанные карточки
+      x: desk.x + desk.w + indent,
       y: indent,
-      w: canvas.width - cards.w - 3 * indent - side,
-      h: cards.h - side
+      w: canvas.width - desk.w - 3 * indent - side,
+      h: desk.h - side
     };
 
     // графика
@@ -201,21 +201,21 @@
 
     function mixItems() { // перемешать карточки на столе
       for (let item of items) {
-        item.x = desk.x + Math.random() * (desk.w);
-        item.y = desk.y + Math.random() * (desk.h);
+        item.x = mixer.x + Math.random() * (mixer.w);
+        item.y = mixer.y + Math.random() * (mixer.h);
       }
     }
     mixItems();
 
     const traps = [
-      new Trap(cards.x, cards.y),
-      new Trap(cards.x + side, cards.y),
+      new Trap(desk.x, desk.y),
+      new Trap(desk.x + side, desk.y),
 
-      new Trap(cards.x, cards.y + side),
-      new Trap(cards.x + side, cards.y + side),
+      new Trap(desk.x, desk.y + side),
+      new Trap(desk.x + side, desk.y + side),
 
-      new Trap(cards.x, cards.y + side * 2),
-      new Trap(cards.x + side, cards.y + side * 2)
+      new Trap(desk.x, desk.y + side * 2),
+      new Trap(desk.x + side, desk.y + side * 2)
     ];
 
 
@@ -363,7 +363,7 @@
 
         ctx.setLineDash([10, 5]); // Задаём пунктир: 10px линия, 5px пробел
         ctx.strokeStyle = 'gray'; //'#000';
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 2;
 
         ctx.beginPath();
         ctx.moveTo(trap.x, trap.y);
@@ -377,14 +377,14 @@
       }
 
       ctx.beginPath();
-      ctx.moveTo(cards.x + side, cards.y);
-      ctx.lineTo(cards.x + side, cards.y + side * 3);
+      ctx.moveTo(desk.x + side, desk.y);
+      ctx.lineTo(desk.x + side, desk.y + side * 3);
 
-      ctx.moveTo(cards.x, cards.y + side);
-      ctx.lineTo(cards.x + side * 2, cards.y + side);
+      ctx.moveTo(desk.x, desk.y + side);
+      ctx.lineTo(desk.x + side * 2, desk.y + side);
 
-      ctx.moveTo(cards.x, cards.y + side * 2);
-      ctx.lineTo(cards.x + side * 2, cards.y + side * 2);
+      ctx.moveTo(desk.x, desk.y + side * 2);
+      ctx.lineTo(desk.x + side * 2, desk.y + side * 2);
 
       ctx.stroke();
 
@@ -432,8 +432,8 @@
 
       // geometry:
       ctx.fillText(`indent= ${indent} side=${side}`, 5, y += dy);
-      ctx.fillText(`cards= ${cards.x} ${cards.w}`, 5, y += dy);
-      ctx.fillText(`desk= ${desk.x} ${desk.w}`, 5, y += dy);
+      ctx.fillText(`desk= ${desk.x} w:${desk.w}`, 5, y += dy);
+      ctx.fillText(`mixer= ${mixer.x} w:${mixer.w}`, 5, y += dy);
 
       // mouse:
       if (info.e != null) {
@@ -449,6 +449,9 @@
       }
 
       ctx.fillText(drag.active ? 'drag' : '', 5, y += dy);
+
+      ctx.strokeStyle = "lightgray";
+      ctx.strokeRect(mixer.x, mixer.y, mixer.w, mixer.h); //drawRect(trap.x, trap.y, trap.w, trap.h);
     }
 
     function loop() {
