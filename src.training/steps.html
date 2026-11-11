@@ -72,169 +72,217 @@
 
   <script>
 
-    let boxes = [
-    ];
+    class PuzzleMap {
+      name = '?';
+      finished = 0;
+
+      boxes = null;
+
+      hitsBox(x, y) {
+        for (let box of this.boxes) {
+          if (x >= box.x && x <= box.x + box.w &&
+            y >= box.y && y <= box.y + box.h) {
+            return box;
+          }
+        }
+        return null;
+      }
+      clamp() {
+        const box = this.drag.box;
+        if (box == null)
+          return;
+        box.x = Math.max(0, Math.min(canvas.width - box.w, box.x));
+        box.y = Math.max(0, Math.min(canvas.height - box.h, box.y));
+      }
+
+      analyze() {
+        for (let box of this.boxes) {
+          if (box.x > 10)
+            return;
+        }
+        this.finished = 1;
+      }
+
+
+      drag = {
+        active: false,
+        box: null,
+        offsetX: 0,
+        offsetY: 0
+      };
+
+      constructor(name) {
+        this.name = name;
+      }
+
+
+      pointerdown(e) {
+        const p = canvasPoint(e);
+        let box = this.hitsBox(p.x, p.y);
+        if (box == null) return;
+        this.drag.active = true;
+        this.drag.box = box;
+        this.drag.offsetX = p.x - box.x;
+        this.drag.offsetY = p.y - box.y;
+
+        canvas.setPointerCapture(e.pointerId); // захват курсора
+        canvas.style.cursor = "grabbing";
+      }
+
+      pointermove(e) {
+        const p = canvasPoint(e);
+        if (this.drag.active) {
+          this.drag.box.x = p.x - this.drag.offsetX;
+          this.drag.box.y = p.y - this.drag.offsetY;
+
+          this.clamp();
+          this.analyze();
+
+          return;
+        }
+
+        let box = this.hitsBox(p.x, p.y);
+        canvas.style.cursor = box != null ? "grab" : "default";
+      }
+
+      endDrag(e) {
+        this.drag.active = false;
+        canvas.style.cursor = "default";
+        canvas.releasePointerCapture(e.pointerId); // Отпускаем захват
+      }
+
+      pointerup(e) {
+        this.endDrag(e);
+      }
+      pointercancel(e) {
+        this.endDrag(e);
+      }
+
+      draw() {
+        for (let box of this.boxes) {
+          ctx.fillStyle = box.color;
+          ctx.fillRect(box.x, box.y, box.w, box.h);
+        }
+      }
+    }
 
     const info = {
       e: null,
     }
 
-    const drag = {
-      active: false,
-      box: null,
-      offsetX: 0,
-      offsetY: 0
-    };
 
-    class csteps  {
+    class csteps {
+      maps = [];
       current = 0;
 
-      next() {
-        if (this.current == 0) {
-          // -> 1
-          boxes = [
+      map = null;
+
+      constructor() {
+        {
+          let m = new PuzzleMap('map #0');
+          m.boxes = [
             new Box(100, 300, "orange"),
             new Box(200, 300, "red"),
             new Box(300, 300, "green"),
           ];
-          this.current = 1;
+          this.maps.push(m);
         }
-        else if (this.current == 1) {
-          // 1 -> 2
-          boxes = [
+
+        {
+          let m = new PuzzleMap('map #1');
+          m.boxes = [
             new Box(100, 300, "blue"),
             new Box(200, 300, "blue"),
             new Box(300, 300, "blue"),
           ];
-          this.current = 2;
+          this.maps.push(m);
         }
-        else if (this.current == 2) {
-          // 2 -> 3
-          boxes = [
+
+        {
+          let m = new PuzzleMap('map #2');
+          m.boxes = [
             new Box(100, 200, "yellow"),
             new Box(200, 200, "red"),
             new Box(300, 200, "yellow"),
           ];
-          this.current = 3;
+          this.maps.push(m);
         }
+
+        this.map = this.maps[this.current];
       }
 
-      start() {
-        this.next();
+      next() {
+        if (this.current >= this.maps.length-1)
+          return;
+        this.current++;
+        this.map = this.maps[this.current];
       }
 
-      analyze() {
-        if (steps.current == 1) {
-          for (let box of boxes) {
-            if (box.x > 10)
-              return;
-          }
-          this.next();
-        }
-        else if (steps.current == 2) {
-          for (let box of boxes) {
-            if (box.y > 10)
-              return;
-          }
-          this.next();
-        }
-      }
     };
 
     const steps = new csteps();
 
 
-    function hitsBox(x, y) {
-      for (let box of boxes) {
-        if (x >= box.x && x <= box.x + box.w &&
-          y >= box.y && y <= box.y + box.h) {
-          return box;
-        }
-      }
-      return null;
-    }
 
-    function clamp() {
-      const box = drag.box;
-      if (box == null)
-        return;
-      box.x = Math.max(0, Math.min(canvas.width - box.w, box.x));
-      box.y = Math.max(0, Math.min(canvas.height - box.h, box.y));
-    }
 
     canvas.addEventListener("pointerdown", (e) => {
-      const p = canvasPoint(e);
-
-      let box = hitsBox(p.x, p.y);
-      if (box == null) return;
-      drag.active = true;
-      drag.box = box;
-      drag.offsetX = p.x - box.x;
-      drag.offsetY = p.y - box.y;
-      canvas.setPointerCapture(e.pointerId); // захват курсора
-      canvas.style.cursor = "grabbing";
+      steps.map.pointerdown(e);
     });
 
     canvas.addEventListener("pointermove", (e) => {
       info.e = e; // debug
-
-      const p = canvasPoint(e);
-
-      if (drag.active) {
-        drag.box.x = p.x - drag.offsetX;
-        drag.box.y = p.y - drag.offsetY;
-        clamp();
-
-        steps.analyze();
-
-        return;
-      }
-
-      let box = hitsBox(p.x, p.y);
-      canvas.style.cursor = box != null ? "grab" : "default";
+      steps.map.pointermove(e);
     });
 
-    function endDrag(e) {
-      drag.active = false;
-      canvas.style.cursor = "default";
-
-      // Отпускаем захват ?
-      canvas.releasePointerCapture(e.pointerId);
-    }
-
     canvas.addEventListener("pointerup", (e) => {
-      endDrag(e);
+      steps.map.pointerup(e);
     });
 
     canvas.addEventListener("pointercancel", (e) => {
-      endDrag(e);
+      steps.map.pointercancel(e);
     });
 
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      for (let box of boxes) {
-        ctx.fillStyle = box.color;
-        ctx.fillRect(box.x, box.y, box.w, box.h);
-      }
+      steps.map.draw();
     }
 
     function drawInfo() {
       ctx.fillStyle = "black";
       ctx.font = "12px courier new";
       let y = 10;
-      ctx.fillText(drag.active ? 'drag' : '', 5, y += 10);
+      let dy = 20
+
+      // mouse:
+      if (info.e != null) {
+        ctx.fillText(`e.client= ${info.e.clientX} ${info.e.clientY}`, 5, y += dy);
+
+        const p = canvasPoint(info.e);
+        ctx.fillText(`p= ${p.x} ${p.y}`, 5, y += dy);
+
+        // let item = hitsItem(p.x, p.y);
+        // if (item != null) {
+        //   ctx.fillText(`item ${item.x} ${item.y}`, 5, y += dy);
+        // }
+      }
+
+      //   ctx.fillText(drag.active ? 'drag' : '', 5, y += 10);
       ctx.fillText(`steps.current: ${steps.current}`, 5, y += 10);
+      ctx.fillText(`steps.map.name: ${steps.map.name}`, 5, y += 10);
+      ctx.fillText(`steps.map.finished: ${steps.map.finished}`, 5, y += 10);
     }
 
     function loop() {
       draw();
       drawInfo();
+
+      if (steps.map.finished)
+        steps.next();
+
       requestAnimationFrame(loop);
     }
 
-    steps.start();
     loop();
 
   </script>
