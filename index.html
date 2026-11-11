@@ -74,14 +74,22 @@
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
 
-    const indent = canvas.height * 0.03; // отступ от края
-    const side = (canvas.height - 2 * indent) / 3; // основание треугольника
-    const desk = { x: indent, y: indent, w: 2 * side, h: 3 * side }; // место сборки (ловушки)
-    const mixer = { // разбросанные карточки
-      x: desk.x + desk.w + indent,
+    const indent = canvas.height * 0.01; // отступ от края
+    const side = (0.30 * canvas.height); // основание треугольника
+
+    // место сборки (ловушки)
+    const desk = {
+      x: canvas.width / 2 - 1.5 * side,
+      y: canvas.height / 2 - side + 0.15 * side,
+      w: 3 * side, h: 2 * side
+    };
+
+    // разбросанные карточки
+    const mixer = {
+      x: indent,
       y: indent,
-      w: canvas.width - desk.w - 3 * indent - side,
-      h: desk.h - side
+      w: canvas.width - 2 * indent,
+      h: desk.y + desk.h - indent
     };
 
     // графика
@@ -95,16 +103,6 @@
     ];
     const images = await loadImages(imageSources);
 
-    class Trap {
-      x; y; w; h;
-
-      constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.w = side;
-        this.h = side;
-      }
-    }
 
     class Item {
       x; y; w; h;
@@ -196,21 +194,32 @@
 
     function mixItems() { // перемешать карточки на столе
       for (let item of items) {
-        item.x = mixer.x + Math.random() * (mixer.w);
-        item.y = mixer.y + Math.random() * (mixer.h);
+        item.x = mixer.x + Math.random() * (mixer.w - item.w);
+        item.y = mixer.y + Math.random() * (mixer.h - item.h);
       }
     }
     mixItems();
 
+
+    class Trap {
+      x; y; w; h;
+
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.w = side;
+        this.h = side;
+      }
+    }
+
     const traps = [
-      new Trap(desk.x, desk.y),
-      new Trap(desk.x + side, desk.y),
+      new Trap(desk.x + 0 * side, desk.y),
+      new Trap(desk.x + 1 * side, desk.y),
+      new Trap(desk.x + 2 * side, desk.y),
 
-      new Trap(desk.x, desk.y + side),
-      new Trap(desk.x + side, desk.y + side),
-
-      new Trap(desk.x, desk.y + side * 2),
-      new Trap(desk.x + side, desk.y + side * 2)
+      new Trap(desk.x + 0 * side, desk.y + side),
+      new Trap(desk.x + 1 * side, desk.y + side),
+      new Trap(desk.x + 2 * side, desk.y + side),
     ];
 
 
@@ -351,6 +360,10 @@
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+      ctx.fillStyle = "lightgray";
+      ctx.fillRect(desk.x, desk.y, desk.w, desk.h);
+
+
       //рисуем ловушки (фон + пунктир)
       for (let trap of traps) {
         ctx.fillStyle = "lightgray";
@@ -372,14 +385,14 @@
       }
 
       ctx.beginPath();
-      ctx.moveTo(desk.x + side, desk.y);
-      ctx.lineTo(desk.x + side, desk.y + side * 3);
+      ctx.moveTo(desk.x + 1 * side, desk.y);
+      ctx.lineTo(desk.x + 1 * side, desk.y + 2 * side);
+
+      ctx.moveTo(desk.x + 2 * side, desk.y);
+      ctx.lineTo(desk.x + 2 * side, desk.y + 2 * side);
 
       ctx.moveTo(desk.x, desk.y + side);
-      ctx.lineTo(desk.x + side * 2, desk.y + side);
-
-      ctx.moveTo(desk.x, desk.y + side * 2);
-      ctx.lineTo(desk.x + side * 2, desk.y + side * 2);
+      ctx.lineTo(desk.x + 3 * side, desk.y + side);
 
       ctx.stroke();
 
@@ -428,7 +441,7 @@
       // geometry:
       ctx.fillText(`indent= ${indent} side=${side}`, 5, y += dy);
       ctx.fillText(`desk= ${desk.x} w:${desk.w}`, 5, y += dy);
-      ctx.fillText(`mixer= ${mixer.x} w:${mixer.w}`, 5, y += dy);
+      ctx.fillText(`mixer= ${mixer.x} ${mixer.y} ${mixer.w} ${mixer.h}`, 5, y += dy);
 
       // mouse:
       if (info.e != null) {
@@ -445,8 +458,9 @@
 
       ctx.fillText(drag.active ? 'drag' : '', 5, y += dy);
 
-      ctx.strokeStyle = "lightgray";
-      ctx.strokeRect(mixer.x, mixer.y, mixer.w, mixer.h); //drawRect(trap.x, trap.y, trap.w, trap.h);
+      ctx.strokeStyle = "red"; //"lightgray";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(mixer.x, mixer.y, mixer.w, mixer.h);
     }
 
     function loop() {
