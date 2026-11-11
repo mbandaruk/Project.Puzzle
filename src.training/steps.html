@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Прямоугольник</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      color: #e8eaed;
+      font-family: system-ui, sans-serif;
+    }
+
+    canvas {
+      background: lightgray;
+      border: 1px solid #343a46;
+      touch-action: none;
+      cursor: default;
+    }
+
+    p {
+      margin: 12px 16px 0;
+      font-size: 14px;
+      opacity: 0.8;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="game" width="700" height="600"></canvas>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    function canvasPoint(e) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      return {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY
+      };
+    }
+
+
+    class Box {
+      x = 280;
+      y = 170;
+      w = 70;
+      h = 70;
+      color = "navy";
+
+      constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+      }
+    }
+
+
+  </script>
+
+
+  <script>
+
+    let boxes = [
+    ];
+
+    const info = {
+      e: null,
+    }
+
+    const drag = {
+      active: false,
+      box: null,
+      offsetX: 0,
+      offsetY: 0
+    };
+
+    class csteps  {
+      current = 0;
+
+      next() {
+        if (this.current == 0) {
+          // -> 1
+          boxes = [
+            new Box(100, 300, "orange"),
+            new Box(200, 300, "red"),
+            new Box(300, 300, "green"),
+          ];
+          this.current = 1;
+        }
+        else if (this.current == 1) {
+          // 1 -> 2
+          boxes = [
+            new Box(100, 300, "blue"),
+            new Box(200, 300, "blue"),
+            new Box(300, 300, "blue"),
+          ];
+          this.current = 2;
+        }
+        else if (this.current == 2) {
+          // 2 -> 3
+          boxes = [
+            new Box(100, 200, "yellow"),
+            new Box(200, 200, "red"),
+            new Box(300, 200, "yellow"),
+          ];
+          this.current = 3;
+        }
+      }
+
+      start() {
+        this.next();
+      }
+
+      analyze() {
+        if (steps.current == 1) {
+          for (let box of boxes) {
+            if (box.x > 10)
+              return;
+          }
+          this.next();
+        }
+        else if (steps.current == 2) {
+          for (let box of boxes) {
+            if (box.y > 10)
+              return;
+          }
+          this.next();
+        }
+      }
+    };
+
+    const steps = new csteps();
+
+
+    function hitsBox(x, y) {
+      for (let box of boxes) {
+        if (x >= box.x && x <= box.x + box.w &&
+          y >= box.y && y <= box.y + box.h) {
+          return box;
+        }
+      }
+      return null;
+    }
+
+    function clamp() {
+      const box = drag.box;
+      if (box == null)
+        return;
+      box.x = Math.max(0, Math.min(canvas.width - box.w, box.x));
+      box.y = Math.max(0, Math.min(canvas.height - box.h, box.y));
+    }
+
+    canvas.addEventListener("pointerdown", (e) => {
+      const p = canvasPoint(e);
+
+      let box = hitsBox(p.x, p.y);
+      if (box == null) return;
+      drag.active = true;
+      drag.box = box;
+      drag.offsetX = p.x - box.x;
+      drag.offsetY = p.y - box.y;
+      canvas.setPointerCapture(e.pointerId); // захват курсора
+      canvas.style.cursor = "grabbing";
+    });
+
+    canvas.addEventListener("pointermove", (e) => {
+      info.e = e; // debug
+
+      const p = canvasPoint(e);
+
+      if (drag.active) {
+        drag.box.x = p.x - drag.offsetX;
+        drag.box.y = p.y - drag.offsetY;
+        clamp();
+
+        steps.analyze();
+
+        return;
+      }
+
+      let box = hitsBox(p.x, p.y);
+      canvas.style.cursor = box != null ? "grab" : "default";
+    });
+
+    function endDrag(e) {
+      drag.active = false;
+      canvas.style.cursor = "default";
+
+      // Отпускаем захват ?
+      canvas.releasePointerCapture(e.pointerId);
+    }
+
+    canvas.addEventListener("pointerup", (e) => {
+      endDrag(e);
+    });
+
+    canvas.addEventListener("pointercancel", (e) => {
+      endDrag(e);
+    });
+
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let box of boxes) {
+        ctx.fillStyle = box.color;
+        ctx.fillRect(box.x, box.y, box.w, box.h);
+      }
+    }
+
+    function drawInfo() {
+      ctx.fillStyle = "black";
+      ctx.font = "12px courier new";
+
+      let y = 10;
+
+      //   // canvas:
+      //   const rect = canvas.getBoundingClientRect();
+      //   ctx.fillText(`canvas bounding rect= ${rect.x} ${rect.y} ${rect.width} ${rect.height}`, 5, y += 10);
+
+      //   ctx.fillText(`canvas= ${canvas.x} ${canvas.y} ${canvas.width} ${canvas.height}`, 5, y += 10);
+
+      //   // mouse:
+      //   if (info.e != null) {
+      //     ctx.fillText(`e.client= ${info.e.clientX} ${info.e.clientY}`, 5, y += 10);
+
+      //     const p = canvasPoint(info.e);
+      //     ctx.fillText(`p= ${p.x} ${p.y}`, 5, y += 10);
+
+      //     let box = hitsBox(p.x, p.y);
+      //     if (box != null) {
+      //       ctx.fillText(`box ${box.color}`, 5, y += 10);
+      //     }
+      //   }
+
+      ctx.fillText(drag.active ? 'drag' : '', 5, y += 10);
+
+      ctx.fillText(`steps.current: ${steps.current}`, 5, y += 10);
+    }
+
+    function loop() {
+      draw();
+      drawInfo();
+      requestAnimationFrame(loop);
+    }
+
+    steps.start();
+    loop();
+
+
+
+  </script>
+</body>
+
+</html>
