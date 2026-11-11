@@ -88,24 +88,24 @@
     const side = (0.30 * canvas.height); // основание треугольника
 
     // место сборки (ловушки)
-    const desk = {
+    const trapArea = {
       x: canvas.width / 2 - 1.5 * side,
       y: canvas.height / 2 - side + 0.15 * side,
       w: 3 * side, h: 2 * side
     };
 
     // разбросанные карточки
-    const mixer = {
+    const mixArea = {
       x: indent,
       y: indent,
       w: canvas.width - 2 * indent,
       h: canvas.height - 2 * indent
     };
     // запретная зона для разброса
-    const nomixer = {
-      x: desk.x,
-      y: desk.y,
-      w: desk.w,
+    const nomixArea = {
+      x: trapArea.x,
+      y: trapArea.y,
+      w: trapArea.w,
       h: canvas.height
     };
 
@@ -214,10 +214,10 @@
     function mixItems() {
       for (let item of items) {
         while (true) {
-          item.x = mixer.x + Math.random() * (mixer.w - item.w);
-          item.y = mixer.y + Math.random() * (mixer.h - item.h);
+          item.x = mixArea.x + Math.random() * (mixArea.w - item.w);
+          item.y = mixArea.y + Math.random() * (mixArea.h - item.h);
 
-          if (!rectsIntersect(item, nomixer)) // не попал в запретную зону
+          if (!rectsIntersect(item, nomixArea)) // не попал в запретную зону
             break;
         }
       }
@@ -237,13 +237,13 @@
     }
 
     const traps = [
-      new Trap(desk.x + 0 * side, desk.y),
-      new Trap(desk.x + 1 * side, desk.y),
-      new Trap(desk.x + 2 * side, desk.y),
+      new Trap(trapArea.x + 0 * side, trapArea.y),
+      new Trap(trapArea.x + 1 * side, trapArea.y),
+      new Trap(trapArea.x + 2 * side, trapArea.y),
 
-      new Trap(desk.x + 0 * side, desk.y + side),
-      new Trap(desk.x + 1 * side, desk.y + side),
-      new Trap(desk.x + 2 * side, desk.y + side),
+      new Trap(trapArea.x + 0 * side, trapArea.y + side),
+      new Trap(trapArea.x + 1 * side, trapArea.y + side),
+      new Trap(trapArea.x + 2 * side, trapArea.y + side),
     ];
 
 
@@ -405,14 +405,14 @@
       }
 
       ctx.beginPath();
-      ctx.moveTo(desk.x + 1 * side, desk.y);
-      ctx.lineTo(desk.x + 1 * side, desk.y + 2 * side);
+      ctx.moveTo(trapArea.x + 1 * side, trapArea.y);
+      ctx.lineTo(trapArea.x + 1 * side, trapArea.y + 2 * side);
 
-      ctx.moveTo(desk.x + 2 * side, desk.y);
-      ctx.lineTo(desk.x + 2 * side, desk.y + 2 * side);
+      ctx.moveTo(trapArea.x + 2 * side, trapArea.y);
+      ctx.lineTo(trapArea.x + 2 * side, trapArea.y + 2 * side);
 
-      ctx.moveTo(desk.x, desk.y + side);
-      ctx.lineTo(desk.x + 3 * side, desk.y + side);
+      ctx.moveTo(trapArea.x, trapArea.y + side);
+      ctx.lineTo(trapArea.x + 3 * side, trapArea.y + side);
 
       ctx.stroke();
 
@@ -460,8 +460,8 @@
 
       // geometry:
       ctx.fillText(`indent= ${indent} side=${side}`, 5, y += dy);
-      ctx.fillText(`desk= ${desk.x} w:${desk.w}`, 5, y += dy);
-      ctx.fillText(`mixer= ${mixer.x} ${mixer.y} ${mixer.w} ${mixer.h}`, 5, y += dy);
+      ctx.fillText(`desk= ${trapArea.x} w:${trapArea.w}`, 5, y += dy);
+      ctx.fillText(`mixer= ${mixArea.x} ${mixArea.y} ${mixArea.w} ${mixArea.h}`, 5, y += dy);
 
       // mouse:
       if (info.e != null) {
@@ -480,9 +480,9 @@
 
       ctx.lineWidth = 2;
       ctx.strokeStyle = "red";
-      ctx.strokeRect(mixer.x, mixer.y, mixer.w, mixer.h);
+      ctx.strokeRect(mixArea.x, mixArea.y, mixArea.w, mixArea.h);
       ctx.strokeStyle = "blue";
-      ctx.strokeRect(nomixer.x, nomixer.y, nomixer.w, nomixer.h);
+      ctx.strokeRect(nomixArea.x, nomixArea.y, nomixArea.w, nomixArea.h);
     }
 
     function loop() {
