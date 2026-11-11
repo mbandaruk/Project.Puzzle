@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Прямоугольник</title>
+
+</head>
+
+<body>
+
+  <script>
+
+    class Map1 {
+      draw() {
+        document.write('map 1<br>');
+      }
+    }
+    class Map2 {
+      haha() {
+        document.write('плохое слово<br>');
+      }
+    }
+
+    let map1 = new Map1();
+    map1.draw();
+
+    let map2 = new Map2();
+    map2.haha();
+
+
+    let obj = null;
+
+    obj = map1;
+    obj.draw();
+
+    obj = map2;
+    obj.draw();
+
+
+  </script>
+</body>
+
+</html>
