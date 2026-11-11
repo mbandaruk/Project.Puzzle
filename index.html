@@ -68,6 +68,16 @@
       return Promise.all(sources.map(url => loadImage(url)));
     }
 
+    // Проверяет, пересекаются ли два прямоугольника
+    function rectsIntersect(a, b) {
+      return !(
+        a.x + a.w < b.x ||   // a левее b
+        a.x > b.x + b.w ||   // a правее b
+        a.y + a.h < b.y ||   // a выше b
+        a.y > b.y + b.h      // a ниже b
+      );
+    }
+
   </script>
 
   <script type="module">
@@ -89,7 +99,14 @@
       x: indent,
       y: indent,
       w: canvas.width - 2 * indent,
-      h: desk.y + desk.h - indent
+      h: canvas.height - 2 * indent
+    };
+    // запретная зона для разброса
+    const nomixer = {
+      x: desk.x,
+      y: desk.y,
+      w: desk.w,
+      h: canvas.height
     };
 
     // графика
@@ -192,10 +209,17 @@
       new Item(5, 'r'),
     ];
 
-    function mixItems() { // перемешать карточки на столе
+
+    // перемешать карточки на столе
+    function mixItems() {
       for (let item of items) {
-        item.x = mixer.x + Math.random() * (mixer.w - item.w);
-        item.y = mixer.y + Math.random() * (mixer.h - item.h);
+        while (true) {
+          item.x = mixer.x + Math.random() * (mixer.w - item.w);
+          item.y = mixer.y + Math.random() * (mixer.h - item.h);
+
+          if (!rectsIntersect(item, nomixer)) // не попал в запретную зону
+            break;
+        }
       }
     }
     mixItems();
@@ -360,10 +384,6 @@
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      ctx.fillStyle = "lightgray";
-      ctx.fillRect(desk.x, desk.y, desk.w, desk.h);
-
-
       //рисуем ловушки (фон + пунктир)
       for (let trap of traps) {
         ctx.fillStyle = "lightgray";
@@ -458,9 +478,11 @@
 
       ctx.fillText(drag.active ? 'drag' : '', 5, y += dy);
 
-      ctx.strokeStyle = "red"; //"lightgray";
       ctx.lineWidth = 2;
+      ctx.strokeStyle = "red";
       ctx.strokeRect(mixer.x, mixer.y, mixer.w, mixer.h);
+      ctx.strokeStyle = "blue";
+      ctx.strokeRect(nomixer.x, nomixer.y, nomixer.w, nomixer.h);
     }
 
     function loop() {
