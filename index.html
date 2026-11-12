@@ -54,6 +54,9 @@
   4K 3840 × 2160   -->
 
   <script>
+
+    // ---------- картинки ----------
+
     function loadImage(url) {
       return new Promise((resolve, reject) => {
         const img = new Image();
@@ -68,6 +71,22 @@
       return Promise.all(sources.map(url => loadImage(url)));
     }
 
+
+    // ---------- холст, геометрия ----------
+
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    function canvasPoint(e) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      return {
+        x: (e.clientX - rect.left) * scaleX,
+        y: (e.clientY - rect.top) * scaleY
+      };
+    }
+
     // Проверяет, пересекаются ли два прямоугольника
     function rectsIntersect(a, b) {
       return !(
@@ -77,12 +96,6 @@
         a.y > b.y + b.h      // a ниже b
       );
     }
-
-  </script>
-
-  <script type="module">
-    const canvas = document.getElementById("game");
-    const ctx = canvas.getContext("2d");
 
     const indent = canvas.height * 0.01; // отступ от края
     const side = (0.30 * canvas.height); // основание треугольника
@@ -94,14 +107,14 @@
       w: 3 * side, h: 2 * side
     };
 
-    // разбросанные карточки
+    // место для разбросанных карточек
     const mixArea = {
       x: indent,
       y: indent,
       w: canvas.width - 2 * indent,
       h: canvas.height - 2 * indent
     };
-    // запретная зона для разброса
+    // запретное место для разброса
     const nomixArea = {
       x: trapArea.x,
       y: trapArea.y,
@@ -109,8 +122,8 @@
       h: canvas.height
     };
 
-    // графика
-    const imageSources = [
+    // ---------- картинки ----------
+    const imageSources1 = [
       'img/ok0.jpg',
       'img/ok1.jpg',
       'img/ok2.jpg',
@@ -118,14 +131,45 @@
       'img/ok4.jpg',
       'img/ok5.jpg',
     ];
-    const images = await loadImages(imageSources);
 
+    let images1 = null;
+    let images2 = null;
+
+
+    // ---------- Item ----------
 
     class Item {
       x; y; w; h;
+      scenario;
       num = 1;
       type = 't';
       image;
+
+      constructor(scenario, num, type) {
+        this.scenario = scenario;
+        this.num = num;
+        this.type = type;
+
+        if (this.scenario == 1) {
+          this.image = images1[num];
+        }
+        else {
+        }
+
+        if (this.type == 't') {
+          this.w = side;
+          this.h = side / 2;
+        } else if (this.type == 'b') {
+          this.w = side;
+          this.h = side / 2;
+        } else if (this.type == 'l') {
+          this.w = side / 2;
+          this.h = side;
+        } else {
+          this.w = side / 2;
+          this.h = side;
+        }
+      }
 
       MakePath() {
         ctx.beginPath();
@@ -156,74 +200,10 @@
         ctx.clip(); // применяем клип
       }
 
-      constructor(num, type) {
-        this.num = num;
-        this.type = type;
-        this.image = images[num];
-        if (this.type == 't') {
-          this.w = side;
-          this.h = side / 2;
-        } else if (this.type == 'b') {
-          this.w = side;
-          this.h = side / 2;
-        } else if (this.type == 'l') {
-          this.w = side / 2;
-          this.h = side;
-        } else {
-          this.w = side / 2;
-          this.h = side;
-        }
-      }
     }
 
-    // треугольники (фигуры)
-    const items = [
-      new Item(0, 't'),
-      new Item(0, 'b'),
-      new Item(0, 'l'),
-      new Item(0, 'r'),
 
-      new Item(1, 't'),
-      new Item(1, 'b'),
-      new Item(1, 'l'),
-      new Item(1, 'r'),
-
-      new Item(2, 't'),
-      new Item(2, 'b'),
-      new Item(2, 'l'),
-      new Item(2, 'r'),
-
-      new Item(3, 't'),
-      new Item(3, 'b'),
-      new Item(3, 'l'),
-      new Item(3, 'r'),
-
-      new Item(4, 't'),
-      new Item(4, 'b'),
-      new Item(4, 'l'),
-      new Item(4, 'r'),
-
-      new Item(5, 't'),
-      new Item(5, 'b'),
-      new Item(5, 'l'),
-      new Item(5, 'r'),
-    ];
-
-
-    // перемешать карточки на столе
-    function mixItems() {
-      for (let item of items) {
-        while (true) {
-          item.x = mixArea.x + Math.random() * (mixArea.w - item.w);
-          item.y = mixArea.y + Math.random() * (mixArea.h - item.h);
-
-          if (!rectsIntersect(item, nomixArea)) // не попал в запретную зону
-            break;
-        }
-      }
-    }
-    mixItems();
-
+    // ---------- Trap ----------
 
     class Trap {
       x; y; w; h;
@@ -236,222 +216,374 @@
       }
     }
 
-    const traps = [
-      new Trap(trapArea.x + 0 * side, trapArea.y),
-      new Trap(trapArea.x + 1 * side, trapArea.y),
-      new Trap(trapArea.x + 2 * side, trapArea.y),
 
-      new Trap(trapArea.x + 0 * side, trapArea.y + side),
-      new Trap(trapArea.x + 1 * side, trapArea.y + side),
-      new Trap(trapArea.x + 2 * side, trapArea.y + side),
-    ];
+    // ---------- maps ----------
 
+    class TextMap {
+      name = '?';
+      finished = 0;
+
+      pointerdown(e) {
+        this.finished = 1;
+      }
+
+      pointermove(e) {
+      }
+
+      pointerup(e) {
+      }
+
+      pointercancel(e) {
+      }
+
+      draw() {
+        ctx.fillStyle = "gray";
+        ctx.font = "52px courier new bold";
+        ctx.fillText(this.name, 500, 500);
+      }
+    }
+
+    class PuzzleMap {
+      name = '?';
+      finished = 0;
+      items = null;
+      scenario;
+
+      hitsItem(x, y) {
+        // поиск попадания курсором. перебор массива в обратном порядке
+        for (let i = this.items.length - 1; i >= 0; i--) {
+          let item = this.items[i];
+
+          ctx.save(); //  Сохраняем состояние
+          item.MakePath();
+          const isInside = ctx.isPointInPath(x, y);
+          ctx.restore(); // Восстанавливаем состояние
+          if (isInside)
+            return item;
+        }
+        return null;
+      }
+
+      clamp() {
+        const item = this.drag.item;
+        if (item == null)
+          return;
+        item.x = Math.max(0, Math.min(canvas.width - item.w, item.x));
+        item.y = Math.max(0, Math.min(canvas.height - item.h, item.y));
+      }
+
+      calcTrap() {
+        const item = this.drag.item;
+        if (item == null)
+          return;
+
+        const distance = 0.1 * side;
+
+        for (let trap of this.traps) {
+          // точка привязки
+          let point = { x: 0, y: 0 };
+
+          if (item.type == 't' || item.type == 'l') {
+            point = { x: trap.x, y: trap.y };
+          }
+          else if (item.type == 'b') {
+            point = { x: trap.x, y: trap.y + trap.h / 2 };
+          }
+          else {
+            point = { x: trap.x + trap.w / 2, y: trap.y };
+          }
+
+          if (Math.abs(point.x - item.x) < distance && Math.abs(point.y - item.y) < distance) {
+            item.x = point.x;
+            item.y = point.y;
+            return;
+          }
+        }
+      }
+
+      analyze() {
+        //   for (let box of this.boxes) {
+        //     if (box.x > 10)
+        //       return;
+        //   }
+        //   this.finished = 1;
+      }
+
+      buildItems() {
+        this.items = [
+          new Item(this.scenario, 0, 't'),
+          new Item(this.scenario, 0, 'b'),
+          new Item(this.scenario, 0, 'l'),
+          new Item(this.scenario, 0, 'r'),
+
+          new Item(this.scenario, 1, 't'),
+          new Item(this.scenario, 1, 'b'),
+          new Item(this.scenario, 1, 'l'),
+          new Item(this.scenario, 1, 'r'),
+
+          new Item(this.scenario, 2, 't'),
+          new Item(this.scenario, 2, 'b'),
+          new Item(this.scenario, 2, 'l'),
+          new Item(this.scenario, 2, 'r'),
+
+          new Item(this.scenario, 3, 't'),
+          new Item(this.scenario, 3, 'b'),
+          new Item(this.scenario, 3, 'l'),
+          new Item(this.scenario, 3, 'r'),
+
+          new Item(this.scenario, 4, 't'),
+          new Item(this.scenario, 4, 'b'),
+          new Item(this.scenario, 4, 'l'),
+          new Item(this.scenario, 4, 'r'),
+
+          new Item(this.scenario, 5, 't'),
+          new Item(this.scenario, 5, 'b'),
+          new Item(this.scenario, 5, 'l'),
+          new Item(this.scenario, 5, 'r'),
+        ];
+      }
+
+      // перемешать карточки на столе
+      mixItems() {
+        for (let item of this.items) {
+          while (true) {
+            item.x = mixArea.x + Math.random() * (mixArea.w - item.w);
+            item.y = mixArea.y + Math.random() * (mixArea.h - item.h);
+
+            if (!rectsIntersect(item, nomixArea)) // не попал в запретную зону
+              break;
+          }
+        }
+      }
+
+      traps = [
+        new Trap(trapArea.x + 0 * side, trapArea.y),
+        new Trap(trapArea.x + 1 * side, trapArea.y),
+        new Trap(trapArea.x + 2 * side, trapArea.y),
+
+        new Trap(trapArea.x + 0 * side, trapArea.y + side),
+        new Trap(trapArea.x + 1 * side, trapArea.y + side),
+        new Trap(trapArea.x + 2 * side, trapArea.y + side),
+      ];
+
+
+      drag = {
+        active: false,
+        item: null,
+        offsetX: 0,
+        offsetY: 0
+      };
+
+      constructor(name, scenario) {
+        this.name = name;
+        this.scenario = scenario;
+        this.buildItems();
+        this.mixItems();
+      }
+
+
+      pointerdown(e) {
+        const p = canvasPoint(e);
+
+
+        let item = this.hitsItem(p.x, p.y);
+        if (item != null) {
+          // перенос в конец массива (в ближний слой)
+          const index = this.items.indexOf(item);
+          if (index == -1)
+            return;
+          this.items.splice(index, 1);
+          this.items.push(item);
+
+          this.drag.active = true;
+          this.drag.item = item;
+          this.drag.offsetX = p.x - item.x;
+          this.drag.offsetY = p.y - item.y;
+          canvas.setPointerCapture(e.pointerId); // захват курсора
+          canvas.style.cursor = "grabbing";
+        }
+      }
+
+      pointermove(e) {
+        const p = canvasPoint(e);
+
+        if (this.drag.active) {
+          this.drag.item.x = p.x - this.drag.offsetX;
+          this.drag.item.y = p.y - this.drag.offsetY;
+          this.clamp();
+          this.calcTrap();
+          return;
+        }
+        let item = this.hitsItem(p.x, p.y);
+        canvas.style.cursor = item != null ? "grab" : "default";
+      }
+
+      endDrag(e) {
+        this.drag.active = false;
+        canvas.style.cursor = "default";
+        canvas.releasePointerCapture(e.pointerId); // Отпускаем захват
+      }
+
+      pointerup(e) {
+        this.endDrag(e);
+      }
+
+      pointercancel(e) {
+        this.endDrag(e);
+      }
+
+      draw() {
+        //рисуем ловушки (фон + пунктир)
+        for (let trap of this.traps) {
+          ctx.fillStyle = "lightgray";
+          ctx.fillRect(trap.x, trap.y, trap.w, trap.h);
+
+          ctx.setLineDash([10, 5]); // Задаём пунктир: 10px линия, 5px пробел
+          ctx.strokeStyle = 'gray'; //'#000';
+          ctx.lineWidth = 2;
+
+          ctx.beginPath();
+          ctx.moveTo(trap.x, trap.y);
+          ctx.lineTo(trap.x + trap.w, trap.y + trap.w);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(trap.x + trap.w, trap.y);
+          ctx.lineTo(trap.x, trap.y + trap.w);
+          ctx.stroke();
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(trapArea.x + 1 * side, trapArea.y);
+        ctx.lineTo(trapArea.x + 1 * side, trapArea.y + 2 * side);
+
+        ctx.moveTo(trapArea.x + 2 * side, trapArea.y);
+        ctx.lineTo(trapArea.x + 2 * side, trapArea.y + 2 * side);
+
+        ctx.moveTo(trapArea.x, trapArea.y + side);
+        ctx.lineTo(trapArea.x + 3 * side, trapArea.y + side);
+
+        ctx.stroke();
+
+        // рисуем фигуры. перебор массива в прямом порядке
+        for (let item of this.items) {
+          ctx.save(); // Сохраняем состояние
+
+          item.MakePath();
+          if (item.type == 't') {
+            // верхний треугольник
+            ctx.drawImage(item.image,
+              0, 0, 800, 400,
+              item.x, item.y, item.w, item.h);
+          } else if (item.type == 'b') {
+            // нижний треугольник
+            ctx.drawImage(item.image,
+              0, 400, 800, 400,
+              item.x, item.y, item.w, item.h);
+          } else if (item.type == 'l') {
+            // левый треугольник
+            ctx.drawImage(item.image,
+              0, 0, 400, 800,
+              item.x, item.y, item.w, item.h);
+          } else {
+            // правый треугольник
+            ctx.drawImage(item.image,
+              400, 0, 400, 800,
+              item.x, item.y, item.w, item.h);
+          }
+
+          ctx.restore(); // Восстанавливаем состояние
+        }
+      }
+    }
+
+    // ---------- steps ----------
+
+    class csteps {
+      maps = [];
+      current = 0;
+      map = null;
+
+      constructor() {
+        // создаём карты в нужном порядке:
+
+        {
+          let m = new TextMap();
+          m.name = 'Кликни мышкой для начала игры';
+          this.maps.push(m);
+        }
+
+        {
+          let m = new PuzzleMap('puzzle map (good)', 1);
+          this.maps.push(m);
+        }
+
+        {
+          let m = new TextMap();
+          m.name = 'Отличный результат! Кликни мышкой, чтобы сыграть ещё раз';
+          this.maps.push(m);
+        }
+
+        this.map = this.maps[this.current];
+      }
+
+      next() {
+        if (this.current >= this.maps.length - 1)
+          this.current = 0;
+        else
+          this.current++;
+
+        this.map = this.maps[this.current];
+        this.map.finished = 0;
+      }
+
+    };
+
+  </script>
+
+  <script type="module">
+    images1 = await loadImages(imageSources1);
 
     const info = {
       e: null,
     }
 
-    const drag = {
-      active: false,
-      item: null,
-      offsetX: 0,
-      offsetY: 0
-    };
+    const steps = new csteps();
 
-
-    function canvasPoint(e) {
-      const rect = canvas.getBoundingClientRect();
-      const scaleX = canvas.width / rect.width;
-      const scaleY = canvas.height / rect.height;
-      return {
-        x: (e.clientX - rect.left) * scaleX,
-        y: (e.clientY - rect.top) * scaleY
-      };
-    }
-
-
-    function hitsItem(x, y) {
-      // поиск попадания курсором. перебор массива в обратном порядке
-      for (let i = items.length - 1; i >= 0; i--) {
-        let item = items[i];
-        ctx.save(); //  Сохраняем состояние
-        item.MakePath();
-        const isInside = ctx.isPointInPath(x, y);
-        ctx.restore(); // Восстанавливаем состояние
-        if (isInside)
-          return item;
-      }
-      return null;
-    }
-
-
-    function clamp() {
-      const item = drag.item;
-      if (item == null)
-        return;
-      item.x = Math.max(0, Math.min(canvas.width - item.w, item.x));
-      item.y = Math.max(0, Math.min(canvas.height - item.h, item.y));
-    }
-
-    function calcTrap() {
-      const item = drag.item;
-      if (item == null)
-        return;
-
-      const distance = 0.1 * side;
-
-      for (let trap of traps) {
-        // точка привязки
-        let point = { x: 0, y: 0 };
-
-        if (item.type == 't' || item.type == 'l') {
-          point = { x: trap.x, y: trap.y };
-        }
-        else if (item.type == 'b') {
-          point = { x: trap.x, y: trap.y + trap.h / 2 };
-        }
-        else {
-          point = { x: trap.x + trap.w / 2, y: trap.y };
-        }
-
-        if (Math.abs(point.x - item.x) < distance && Math.abs(point.y - item.y) < distance) {
-          item.x = point.x;
-          item.y = point.y;
-          return;
-        }
-      }
-    }
 
     canvas.addEventListener("pointerdown", (e) => {
-      const p = canvasPoint(e);
-
-      let item = hitsItem(p.x, p.y);
-      if (item != null) {
-        // перенос в конец массива (в ближний слой)
-        const index = items.indexOf(item);
-        if (index == -1)
-          return;
-        items.splice(index, 1);
-        items.push(item);
-
-        drag.active = true;
-        drag.item = item;
-        drag.offsetX = p.x - item.x;
-        drag.offsetY = p.y - item.y;
-        canvas.setPointerCapture(e.pointerId); // захват курсора
-        canvas.style.cursor = "grabbing";
-      }
+      steps.map.pointerdown(e);
     });
 
     canvas.addEventListener("pointermove", (e) => {
       info.e = e; // debug
+      steps.map.pointermove(e);
 
-      const p = canvasPoint(e);
-
-      if (drag.active) {
-        drag.item.x = p.x - drag.offsetX;
-        drag.item.y = p.y - drag.offsetY;
-        clamp();
-        calcTrap();
-        return;
-      }
-      let item = hitsItem(p.x, p.y);
-      canvas.style.cursor = item != null ? "grab" : "default";
     });
 
-    function endDrag(e) {
-      drag.active = false;
-      canvas.style.cursor = "default";
-
-      // Отпускаем захват ?
-      canvas.releasePointerCapture(e.pointerId);
-    }
-
     canvas.addEventListener("pointerup", (e) => {
-      // console.log("pointerup");
-      endDrag(e);
+      steps.map.pointerup(e);
     });
 
     canvas.addEventListener("pointercancel", (e) => {
-      // console.log("pointercancel");
-      endDrag(e);
+      steps.map.pointercancel(e);
     });
 
-    // canvas.addEventListener("pointerleave", (e) => {
-    //   // console.log("pointerleave");
-    // });
+    canvas.addEventListener('dblclick', (e) => {
+      // debug
+      steps.map.finished = 1;
+    })
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      //рисуем ловушки (фон + пунктир)
-      for (let trap of traps) {
-        ctx.fillStyle = "lightgray";
-        ctx.fillRect(trap.x, trap.y, trap.w, trap.h);
-
-        ctx.setLineDash([10, 5]); // Задаём пунктир: 10px линия, 5px пробел
-        ctx.strokeStyle = 'gray'; //'#000';
-        ctx.lineWidth = 2;
-
-        ctx.beginPath();
-        ctx.moveTo(trap.x, trap.y);
-        ctx.lineTo(trap.x + trap.w, trap.y + trap.w);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(trap.x + trap.w, trap.y);
-        ctx.lineTo(trap.x, trap.y + trap.w);
-        ctx.stroke();
-      }
-
-      ctx.beginPath();
-      ctx.moveTo(trapArea.x + 1 * side, trapArea.y);
-      ctx.lineTo(trapArea.x + 1 * side, trapArea.y + 2 * side);
-
-      ctx.moveTo(trapArea.x + 2 * side, trapArea.y);
-      ctx.lineTo(trapArea.x + 2 * side, trapArea.y + 2 * side);
-
-      ctx.moveTo(trapArea.x, trapArea.y + side);
-      ctx.lineTo(trapArea.x + 3 * side, trapArea.y + side);
-
-      ctx.stroke();
-
-      // рисуем фигуры. перебор массива в прямом порядке
-      for (let item of items) {
-        ctx.save(); // Сохраняем состояние
-        item.MakePath();
-
-        if (item.type == 't') {
-          // верхний треугольник
-          ctx.drawImage(item.image,
-            0, 0, 800, 400,
-            item.x, item.y, item.w, item.h);
-        } else if (item.type == 'b') {
-          // нижний треугольник
-          ctx.drawImage(item.image,
-            0, 400, 800, 400,
-            item.x, item.y, item.w, item.h);
-        } else if (item.type == 'l') {
-          // левый треугольник
-          ctx.drawImage(item.image,
-            0, 0, 400, 800,
-            item.x, item.y, item.w, item.h);
-        } else {
-          // правый треугольник
-          ctx.drawImage(item.image,
-            400, 0, 400, 800,
-            item.x, item.y, item.w, item.h);
-        }
-
-        ctx.restore(); // Восстанавливаем состояние
-      }
+      steps.map.draw();
     }
 
     function drawInfo() {
       ctx.fillStyle = "black";
       ctx.font = "52px courier new bold";
       let y = 10;
-      let dy = 60
+      let dy = 60;
 
       // canvas:
       const rect = canvas.getBoundingClientRect();
@@ -460,8 +592,8 @@
 
       // geometry:
       ctx.fillText(`indent= ${indent} side=${side}`, 5, y += dy);
-      ctx.fillText(`desk= ${trapArea.x} w:${trapArea.w}`, 5, y += dy);
-      ctx.fillText(`mixer= ${mixArea.x} ${mixArea.y} ${mixArea.w} ${mixArea.h}`, 5, y += dy);
+      ctx.fillText(`trapArea= ${trapArea.x} w:${trapArea.w}`, 5, y += dy);
+      ctx.fillText(`mixArea= ${mixArea.x} ${mixArea.y} ${mixArea.w} ${mixArea.h}`, 5, y += dy);
 
       // mouse:
       if (info.e != null) {
@@ -470,24 +602,31 @@
         const p = canvasPoint(info.e);
         ctx.fillText(`p= ${p.x} ${p.y}`, 5, y += dy);
 
-        let item = hitsItem(p.x, p.y);
-        if (item != null) {
-          ctx.fillText(`item ${item.x} ${item.y}`, 5, y += dy);
-        }
+        //     let item = hitsItem(p.x, p.y);
+        //     if (item != null) {
+        //       ctx.fillText(`item ${item.x} ${item.y}`, 5, y += dy);
+        //     }
       }
 
-      ctx.fillText(drag.active ? 'drag' : '', 5, y += dy);
+      //   ctx.fillText(drag.active ? 'drag' : '', 5, y += dy);
 
       ctx.lineWidth = 2;
       ctx.strokeStyle = "red";
       ctx.strokeRect(mixArea.x, mixArea.y, mixArea.w, mixArea.h);
       ctx.strokeStyle = "blue";
       ctx.strokeRect(nomixArea.x, nomixArea.y, nomixArea.w, nomixArea.h);
+
+      ctx.fillText(`steps.current: ${steps.current}`, 5, y += dy);
+      ctx.fillText(`steps.map.name: ${steps.map.name}`, 5, y += dy);
+      ctx.fillText(`steps.map.finished: ${steps.map.finished}`, 5, y += dy);
+
     }
 
     function loop() {
       draw();
-      //drawInfo();
+      // drawInfo(); // debug
+      if (steps.map.finished)
+        steps.next();
       requestAnimationFrame(loop);
     }
 
