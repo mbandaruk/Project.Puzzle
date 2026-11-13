@@ -153,6 +153,7 @@
       num = 1;
       type = 't';
       image;
+      trap = null;
 
       constructor(scenario, num, type) {
         this.scenario = scenario;
@@ -224,14 +225,34 @@
         this.w = side;
         this.h = side;
       }
+
+      // точка привязки для типа Item
+      hookForItemType(type) {
+        if (type == 't' || type == 'l')
+          return { x: this.x, y: this.y };
+        else if (type == 'b')
+          return { x: this.x, y: this.y + this.h / 2 };
+        else
+          return { x: this.x + this.w / 2, y: this.y };
+      }
     }
 
 
     // ---------- maps ----------
 
     class TextMap {
-      name = '?';
+      text = '?';
       finished = 0;
+
+      constructor(text) {
+        this.text = text;
+        this.init();
+      }
+
+      init() {
+        this.finished = 0;
+      }
+
 
       pointerdown(e) {
         this.finished = 1;
@@ -248,8 +269,8 @@
 
       draw() {
         ctx.fillStyle = "gray";
-        ctx.font = "52px courier new bold";
-        ctx.fillText(this.name, 500, 500);
+        ctx.font = "60px courier new bold";
+        ctx.fillText(this.text, 1500, 1000);
       }
     }
 
@@ -258,6 +279,19 @@
       finished = 0;
       items = null;
       scenario;
+
+      constructor(name, scenario) {
+        this.name = name;
+        this.scenario = scenario;
+        this.buildItems();
+        this.init();
+      }
+
+      init() {
+        this.finished = 0;
+        this.mixItems();
+      }
+
 
       hitsItem(x, y) {
         // поиск попадания курсором. перебор массива в обратном порядке
@@ -282,6 +316,7 @@
         item.y = Math.max(0, Math.min(canvas.height - item.h, item.y));
       }
 
+
       calcTrap() {
         const item = this.drag.item;
         if (item == null)
@@ -289,34 +324,55 @@
 
         const distance = 0.1 * side;
 
+        item.trap = null; // отвязка
         for (let trap of this.traps) {
           // точка привязки
-          let point = { x: 0, y: 0 };
-
-          if (item.type == 't' || item.type == 'l') {
-            point = { x: trap.x, y: trap.y };
-          }
-          else if (item.type == 'b') {
-            point = { x: trap.x, y: trap.y + trap.h / 2 };
-          }
-          else {
-            point = { x: trap.x + trap.w / 2, y: trap.y };
-          }
+          let point = trap.hookForItemType(item.type);
 
           if (Math.abs(point.x - item.x) < distance && Math.abs(point.y - item.y) < distance) {
             item.x = point.x;
             item.y = point.y;
+            item.trap = trap; // привязка
             return;
           }
         }
       }
 
       analyze() {
-        //   for (let box of this.boxes) {
-        //     if (box.x > 10)
-        //       return;
-        //   }
-        //   this.finished = 1;
+        // для каждой ловушки
+        for (let trap of this.traps) {
+
+          // ищем все пойманные элементы
+          let trappedItems = [];
+          for (let item of this.items) {
+            if (item.trap == trap) {
+              trappedItems.push(item);
+            }
+          }
+
+          if (trappedItems.length != 4) {
+            // не поймано 4 элемента
+            return;
+          }
+          else {
+            // поймано 4 элемента
+            console.log(`trapped ${trappedItems.length}`);
+
+            var num = trappedItems[0].num;
+
+            for (let item of trappedItems) {
+              if (item.num != num) // в ловушке разные картинки
+                return;
+            }
+
+            // все элементы в ловушке имеют одинаковый номер картинки
+          }
+        }
+
+        // все ловушки имеют 4 элемента с одинаковыми картинками
+
+        this.finished = 1;
+        return;
       }
 
       buildItems() {
@@ -360,6 +416,8 @@
             item.x = mixArea.x + Math.random() * (mixArea.w - item.w);
             item.y = mixArea.y + Math.random() * (mixArea.h - item.h);
 
+            item.trap = null;
+
             if (!rectsIntersect(item, nomixArea)) // не попал в запретную зону
               break;
           }
@@ -384,17 +442,10 @@
         offsetY: 0
       };
 
-      constructor(name, scenario) {
-        this.name = name;
-        this.scenario = scenario;
-        this.buildItems();
-        this.mixItems();
-      }
 
 
       pointerdown(e) {
         const p = canvasPoint(e);
-
 
         let item = this.hitsItem(p.x, p.y);
         if (item != null) {
@@ -422,6 +473,7 @@
           this.drag.item.y = p.y - this.drag.offsetY;
           this.clamp();
           this.calcTrap();
+          this.analyze();
           return;
         }
         let item = this.hitsItem(p.x, p.y);
@@ -445,8 +497,8 @@
       draw() {
         //рисуем ловушки (фон + пунктир)
         for (let trap of this.traps) {
-          ctx.fillStyle = "lightgray";
-          ctx.fillRect(trap.x, trap.y, trap.w, trap.h);
+          // ctx.fillStyle = "lightgray";
+          // ctx.fillRect(trap.x, trap.y, trap.w, trap.h);
 
           ctx.setLineDash([10, 5]); // Задаём пунктир: 10px линия, 5px пробел
           ctx.strokeStyle = 'gray'; //'#000';
@@ -517,25 +569,25 @@
       constructor() {
         // создаём карты в нужном порядке:
 
-        {
-          let m = new TextMap();
-          m.name = 'Кликни мышкой для начала игры';
-          this.maps.push(m);
-        }
+        this.maps.push(new TextMap('Кликни мышкой для начала игры'));
 
         {
           let m = new PuzzleMap('puzzle map (good)', 0);
           this.maps.push(m);
         }
 
+        this.maps.push(new TextMap('Чистый светлый мир'));
+
         {
           let m = new PuzzleMap('puzzle map (bac)', 1);
           this.maps.push(m);
         }
 
+        this.maps.push(new TextMap('Грязный унылый мир'));
+
         {
           let m = new TextMap();
-          m.name = 'Отличный результат! Кликни мышкой, чтобы сыграть ещё раз';
+          m.text = 'Отличный результат! Кликни мышкой, чтобы сыграть ещё раз';
           this.maps.push(m);
         }
 
@@ -549,7 +601,7 @@
           this.current++;
 
         this.map = this.maps[this.current];
-        this.map.finished = 0;
+        this.map.init();
       }
 
     };
