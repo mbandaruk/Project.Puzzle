@@ -25,7 +25,8 @@
       display: block;
       max-width: 100%;
       max-height: 100%;
-      border: 1px solid lightgray;
+      /* border: 1px solid lightgray; */
+      border: 0;
       touch-action: none;
     }
 
@@ -336,7 +337,7 @@
         ctx.fillRect(this.x, this.y, this.w, this.h);
 
         // текст кнопки
-        drawCenteredText(this.text, this.cx, this.cy, "60px courier new", 'white');
+        drawCenteredText(this.text, this.cx, this.cy, "bold 60px Courier new", 'white');
 
         ctx.restore(); // Восстанавливаем состояние
       }
@@ -395,7 +396,7 @@
 
       draw() {
         let center = { x: canvas.width / 2, y: 0.4 * canvas.height };
-        drawCenteredText(this.text, center.x, center.y, "80px courier new", 'steelblue');
+        drawCenteredText(this.text, center.x, center.y, "bold 90px courier new", 'steelblue');
 
         this.button.draw();
       }
@@ -754,7 +755,7 @@
         return;
 
       ctx.fillStyle = "black";
-      ctx.font = "52px courier new bold";
+      ctx.font = "52px Courier new";
       ctx.textAlign = 'left';
       let y = 10;
       let dy = 60;
