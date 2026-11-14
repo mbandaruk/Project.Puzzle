@@ -87,6 +87,14 @@
       };
     }
 
+    function drawCenteredText(text, x, y, font, color = 'black') {
+      ctx.font = font;
+      ctx.fillStyle = color;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, x, y);
+    }
+
     // Проверяет, пересекаются ли два прямоугольника
     function rectsIntersect(a, b) {
       return !(
@@ -182,7 +190,7 @@
         }
       }
 
-      MakePath() {
+      makePath() {
         ctx.beginPath();
 
         if (this.type == 't') {
@@ -240,19 +248,75 @@
 
     // ---------- maps ----------
 
-    class TextMap {
-      text = '?';
-      finished = 0;
+    class Button {
+      cx = 0; // center
+      cy = 0; // center
+      x = 0;
+      y = 0;
+      w = 600;
+      h = 100;
+      text = '';
 
-      constructor(text) {
+      constructor(cx, cy, text) {
+        this.cx = cx;
+        this.cy = cy;
+        this.x = cx - this.w / 2;
+        this.y = cy - this.h / 2;
         this.text = text;
+      }
+
+      draw() {
+        ctx.save(); // Сохраняем состояние
+        this.makePath(); // обрезка по контуру
+
+        // фон кнопки
+        ctx.fillStyle = 'steelblue';
+        ctx.fillRect(this.x, this.y, this.w, this.h);
+
+        // текст кнопки
+        drawCenteredText(this.text, this.cx, this.cy, "60px courier new", 'white');
+
+        ctx.restore(); // Восстанавливаем состояние
+      }
+
+      makePath() {
+        ctx.beginPath();
+        ctx.rect(this.x, this.y, this.w, this.h);
+        ctx.closePath();
+        ctx.clip(); // применяем клип
+      }
+
+    }
+
+    class TextMap {
+      text = '';
+      finished = 0;
+      button;
+
+      constructor(text, btnText = 'Далее') {
+        this.text = text;
+        let center = { x: canvas.width / 2, y: 0.85 * canvas.height };
+        this.button = new Button(center.x, center.y, btnText);
         this.init();
+      }
+
+      hitsObject(x, y) {
+        //for(let obj..) пока есть только одна кнопка
+        let obj = this.button;
+        {
+          ctx.save(); //  Сохраняем состояние
+          obj.makePath();
+          const isInside = ctx.isPointInPath(x, y);
+          ctx.restore(); // Восстанавливаем состояние
+          if (isInside)
+            return obj;
+        }
+        return null;
       }
 
       init() {
         this.finished = 0;
       }
-
 
       pointerdown(e) {
         this.finished = 1;
@@ -268,9 +332,10 @@
       }
 
       draw() {
-        ctx.fillStyle = "gray";
-        ctx.font = "60px courier new bold";
-        ctx.fillText(this.text, 1500, 1000);
+        let center = { x: canvas.width / 2, y: 0.4 * canvas.height };
+        drawCenteredText(this.text, center.x, center.y, "80px courier new", 'steelblue');
+
+        this.button.draw();
       }
     }
 
@@ -299,7 +364,7 @@
           let item = this.items[i];
 
           ctx.save(); //  Сохраняем состояние
-          item.MakePath();
+          item.makePath();
           const isInside = ctx.isPointInPath(x, y);
           ctx.restore(); // Восстанавливаем состояние
           if (isInside)
@@ -531,7 +596,7 @@
         for (let item of this.items) {
           ctx.save(); // Сохраняем состояние
 
-          item.MakePath();
+          item.makePath(); // обрезка по контуру
           if (item.type == 't') {
             // верхний треугольник
             ctx.drawImage(item.image,
@@ -569,7 +634,7 @@
       constructor() {
         // создаём карты в нужном порядке:
 
-        this.maps.push(new TextMap('Кликни мышкой для начала игры'));
+        this.maps.push(new TextMap('Экологическая игра'));
 
         {
           let m = new PuzzleMap('puzzle map (good)', 0);
@@ -585,11 +650,7 @@
 
         this.maps.push(new TextMap('Грязный унылый мир'));
 
-        {
-          let m = new TextMap();
-          m.text = 'Отличный результат! Кликни мышкой, чтобы сыграть ещё раз';
-          this.maps.push(m);
-        }
+        this.maps.push(new TextMap('Отличный результат!', 'Начать сначала'));
 
         this.map = this.maps[this.current];
       }
