@@ -248,6 +248,13 @@
         ctx.restore(); // Восстанавливаем состояние
       }
 
+      mouseHit(x, y) {
+        ctx.save(); //  Сохраняем состояние
+        this.makePath();
+        const isInside = ctx.isPointInPath(x, y);
+        ctx.restore(); // Восстанавливаем состояние
+        return isInside;
+      }
     }
 
 
@@ -337,6 +344,14 @@
         ctx.closePath();
         ctx.clip(); // применяем клип
       }
+
+      mouseHit(x, y) {
+        ctx.save(); //  Сохраняем состояние
+        this.makePath();
+        const isInside = ctx.isPointInPath(x, y);
+        ctx.restore(); // Восстанавливаем состояние
+        return isInside;
+      }
     }
 
 
@@ -352,28 +367,13 @@
         this.init();
       }
 
-      hitsObject(x, y) {
-        //for(let obj..) пока есть только одна кнопка
-        let obj = this.button;
-        {
-          ctx.save(); //  Сохраняем состояние
-          obj.makePath();
-          const isInside = ctx.isPointInPath(x, y);
-          ctx.restore(); // Восстанавливаем состояние
-          if (isInside)
-            return obj;
-        }
-        return null;
-      }
-
       init() {
         this.finished = 0;
       }
 
       pointerdown(e) {
         const p = canvasPoint(e);
-        var obj = this.hitsObject(p.x, p.y);
-        if (obj == this.button)
+        if (this.button.mouseHit(p.x, p.y))
           this.finished = 1;
       }
 
@@ -419,12 +419,7 @@
         // поиск попадания курсором. перебор массива в обратном порядке
         for (let i = this.items.length - 1; i >= 0; i--) {
           let item = this.items[i];
-
-          ctx.save(); //  Сохраняем состояние
-          item.makePath();
-          const isInside = ctx.isPointInPath(x, y);
-          ctx.restore(); // Восстанавливаем состояние
-          if (isInside)
+          if (item.mouseHit(x, y))
             return item;
         }
         return null;
