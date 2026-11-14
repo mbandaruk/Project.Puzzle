@@ -219,6 +219,35 @@
         ctx.clip(); // применяем клип
       }
 
+      draw() {
+        ctx.save(); // Сохраняем состояние
+
+        this.makePath(); // обрезка по контуру
+        if (this.type == 't') {
+          // верхний треугольник
+          ctx.drawImage(this.image,
+            0, 0, 800, 400,
+            this.x, this.y, this.w, this.h);
+        } else if (this.type == 'b') {
+          // нижний треугольник
+          ctx.drawImage(this.image,
+            0, 400, 800, 400,
+            this.x, this.y, this.w, this.h);
+        } else if (this.type == 'l') {
+          // левый треугольник
+          ctx.drawImage(this.image,
+            0, 0, 400, 800,
+            this.x, this.y, this.w, this.h);
+        } else {
+          // правый треугольник
+          ctx.drawImage(this.image,
+            400, 0, 400, 800,
+            this.x, this.y, this.w, this.h);
+        }
+
+        ctx.restore(); // Восстанавливаем состояние
+      }
+
     }
 
 
@@ -242,6 +271,29 @@
           return { x: this.x, y: this.y + this.h / 2 };
         else
           return { x: this.x + this.w / 2, y: this.y };
+      }
+
+      draw() {
+        ctx.save(); // Сохраняем состояние
+
+        // ctx.fillStyle = "lightgray";
+        // ctx.fillRect(trap.x, trap.y, trap.w, trap.h);
+
+        ctx.setLineDash([10, 5]); // Задаём пунктир: 10px линия, 5px пробел
+        ctx.strokeStyle = 'gray'; //'#000';
+        ctx.lineWidth = 2;
+
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y);
+        ctx.lineTo(this.x + this.w, this.y + this.w);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(this.x + this.w, this.y);
+        ctx.lineTo(this.x, this.y + this.w);
+        ctx.stroke();
+
+        ctx.restore();
       }
     }
 
@@ -565,25 +617,15 @@
       }
 
       draw() {
-        //рисуем ловушки (фон + пунктир)
+        //рисуем ловушки
         for (let trap of this.traps) {
-          // ctx.fillStyle = "lightgray";
-          // ctx.fillRect(trap.x, trap.y, trap.w, trap.h);
-
-          ctx.setLineDash([10, 5]); // Задаём пунктир: 10px линия, 5px пробел
-          ctx.strokeStyle = 'gray'; //'#000';
-          ctx.lineWidth = 2;
-
-          ctx.beginPath();
-          ctx.moveTo(trap.x, trap.y);
-          ctx.lineTo(trap.x + trap.w, trap.y + trap.w);
-          ctx.stroke();
-
-          ctx.beginPath();
-          ctx.moveTo(trap.x + trap.w, trap.y);
-          ctx.lineTo(trap.x, trap.y + trap.w);
-          ctx.stroke();
+          trap.draw();
         }
+
+        // пунктир на ловушках
+        ctx.setLineDash([10, 5]); // Задаём пунктир: 10px линия, 5px пробел
+        ctx.strokeStyle = 'gray'; //'#000';
+        ctx.lineWidth = 2;
 
         ctx.beginPath();
         ctx.moveTo(trapArea.x + 1 * side, trapArea.y);
@@ -599,34 +641,10 @@
 
         // рисуем фигуры. перебор массива в прямом порядке
         for (let item of this.items) {
-          ctx.save(); // Сохраняем состояние
-
-          item.makePath(); // обрезка по контуру
-          if (item.type == 't') {
-            // верхний треугольник
-            ctx.drawImage(item.image,
-              0, 0, 800, 400,
-              item.x, item.y, item.w, item.h);
-          } else if (item.type == 'b') {
-            // нижний треугольник
-            ctx.drawImage(item.image,
-              0, 400, 800, 400,
-              item.x, item.y, item.w, item.h);
-          } else if (item.type == 'l') {
-            // левый треугольник
-            ctx.drawImage(item.image,
-              0, 0, 400, 800,
-              item.x, item.y, item.w, item.h);
-          } else {
-            // правый треугольник
-            ctx.drawImage(item.image,
-              400, 0, 400, 800,
-              item.x, item.y, item.w, item.h);
-          }
-
-          ctx.restore(); // Восстанавливаем состояние
+          item.draw();
         }
 
+        // рисуем кнопку
         this.button.draw();
       }
     }
