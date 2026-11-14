@@ -54,6 +54,11 @@
   4K 3840 × 2160   -->
 
   <script>
+    // ---------- global ----------
+
+    const params = new URLSearchParams(window.location.search);
+    const debug = params.has('debug');
+    const info = params.has('info');
 
     // ---------- картинки ----------
 
@@ -305,7 +310,7 @@
     }
 
 
-    // ---------- maps ----------
+    // ---------- button ----------
 
     class Button {
       cx = 0; // center
@@ -315,6 +320,7 @@
       w = 600;
       h = 100;
       text = '';
+      visible = true;
 
       constructor(cx, cy, text) {
         this.cx = cx;
@@ -325,6 +331,8 @@
       }
 
       draw() {
+        if (!this.visible)
+          return;
         ctx.save(); // Сохраняем состояние
         this.makePath(); // обрезка по контуру
 
@@ -346,6 +354,9 @@
       }
 
       mouseHit(x, y) {
+        if (!this.visible)
+          return;
+
         ctx.save(); //  Сохраняем состояние
         this.makePath();
         const isInside = ctx.isPointInPath(x, y);
@@ -354,6 +365,7 @@
       }
     }
 
+    // ---------- maps ----------
 
     class TextMap {
       text = '';
@@ -362,7 +374,7 @@
 
       constructor(text, btnText = 'Далее') {
         this.text = text;
-        let center = { x: canvas.width / 2, y: 0.85 * canvas.height };
+        let center = { x: canvas.width / 2, y: 0.92 * canvas.height };
         this.button = new Button(center.x, center.y, btnText);
         this.init();
       }
@@ -412,8 +424,8 @@
       init() {
         this.finished = 0;
         this.mixItems();
+        this.button.visible = debug;
       }
-
 
       hitsItem(x, y) {
         // поиск попадания курсором. перебор массива в обратном порядке
@@ -564,6 +576,11 @@
       pointerdown(e) {
         const p = canvasPoint(e);
 
+        if (this.button.mouseHit(p.x, p.y)) {
+          this.finished = 1;
+          return;
+        }
+
         let item = this.hitsItem(p.x, p.y);
         if (item != null) {
           // перенос в конец массива (в ближний слой)
@@ -641,6 +658,14 @@
 
         // рисуем кнопку
         this.button.draw();
+
+        if (info) {
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = "red";
+          ctx.strokeRect(mixArea.x, mixArea.y, mixArea.w, mixArea.h);
+          ctx.strokeStyle = "blue";
+          ctx.strokeRect(nomixArea.x, nomixArea.y, nomixArea.w, nomixArea.h);
+        }
       }
     }
 
@@ -693,19 +718,19 @@
     images0 = await loadImages(imageSources0);
     images1 = await loadImages(imageSources1);
 
-    const info = {
-      e: null,
-    }
-
     const steps = new Steps();
 
+
+    const mouseInfo = {
+      e: null,
+    }
 
     canvas.addEventListener("pointerdown", (e) => {
       steps.map.pointerdown(e);
     });
 
     canvas.addEventListener("pointermove", (e) => {
-      info.e = e; // debug
+      mouseInfo.e = e; // debug
       steps.map.pointermove(e);
 
     });
@@ -718,19 +743,18 @@
       steps.map.pointercancel(e);
     });
 
-    canvas.addEventListener('dblclick', (e) => {
-      // debug
-      steps.map.finished = 1;
-    })
-
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       steps.map.draw();
     }
 
     function drawInfo() {
+      if (!info)
+        return;
+
       ctx.fillStyle = "black";
       ctx.font = "52px courier new bold";
+      ctx.textAlign = 'left';
       let y = 10;
       let dy = 60;
 
@@ -745,10 +769,10 @@
       ctx.fillText(`mixArea= ${mixArea.x} ${mixArea.y} ${mixArea.w} ${mixArea.h}`, 5, y += dy);
 
       // mouse:
-      if (info.e != null) {
-        ctx.fillText(`e.client= ${info.e.clientX} ${info.e.clientY}`, 5, y += dy);
+      if (mouseInfo.e != null) {
+        ctx.fillText(`e.client= ${mouseInfo.e.clientX} ${mouseInfo.e.clientY}`, 5, y += dy);
 
-        const p = canvasPoint(info.e);
+        const p = canvasPoint(mouseInfo.e);
         ctx.fillText(`p= ${p.x} ${p.y}`, 5, y += dy);
 
         //     let item = hitsItem(p.x, p.y);
@@ -759,12 +783,6 @@
 
       //   ctx.fillText(drag.active ? 'drag' : '', 5, y += dy);
 
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = "red";
-      ctx.strokeRect(mixArea.x, mixArea.y, mixArea.w, mixArea.h);
-      ctx.strokeStyle = "blue";
-      ctx.strokeRect(nomixArea.x, nomixArea.y, nomixArea.w, nomixArea.h);
-
       ctx.fillText(`steps.current: ${steps.current}`, 5, y += dy);
       ctx.fillText(`steps.map.name: ${steps.map.name}`, 5, y += dy);
       ctx.fillText(`steps.map.finished: ${steps.map.finished}`, 5, y += dy);
@@ -773,7 +791,7 @@
 
     function loop() {
       draw();
-      // drawInfo(); // debug
+      drawInfo();
       if (steps.map.finished)
         steps.next();
       requestAnimationFrame(loop);
