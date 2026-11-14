@@ -57,8 +57,9 @@
     // ---------- global ----------
 
     const params = new URLSearchParams(window.location.search);
-    const debug = params.has('debug');
-    const info = params.has('info');
+    const paramNext = params.has('n');
+    const paramInfo = params.has('i');
+    const paramQuick = params.has('q');
 
     // ---------- картинки ----------
 
@@ -407,7 +408,8 @@
     }
 
     class PuzzleMap {
-      name = '?';
+      name = '';
+      stage = 0; // 0 - не собран, 1 - собран
       finished = 0;
       items = null;
       button = null;
@@ -422,9 +424,10 @@
       }
 
       init() {
+        this.stage = 0;
         this.finished = 0;
         this.mixItems();
-        this.button.visible = debug;
+        this.button.visible = paramNext;
       }
 
       hitsItem(x, y) {
@@ -468,40 +471,37 @@
       }
 
       analyze() {
+        let fullTraps = 0; // количество полных ловушек
+
         // для каждой ловушки
         for (let trap of this.traps) {
-
-          // ищем все пойманные элементы
+          // ищем все элементы, пойманные в эту ловушку
           let trappedItems = [];
+
           for (let item of this.items) {
-            if (item.trap == trap) {
+            if (item.trap == trap)
               trappedItems.push(item);
-            }
           }
 
-          if (trappedItems.length != 4) {
-            // не поймано 4 элемента
-            return;
-          }
-          else {
+          // анализируем пойманные элементы
+          if (trappedItems.length == 4) {
             // поймано 4 элемента
-            console.log(`trapped ${trappedItems.length}`);
-
-            var num = trappedItems[0].num;
-
-            for (let item of trappedItems) {
-              if (item.num != num) // в ловушке разные картинки
-                return;
+            if (trappedItems[0].num == trappedItems[1].num &&
+              trappedItems[0].num == trappedItems[2].num &&
+              trappedItems[0].num == trappedItems[3].num
+            ) {
+              // все элементы в ловушке имеют одинаковый номер картинки
+              // плюс одна полная ловушка
+              fullTraps++;
             }
-
-            // все элементы в ловушке имеют одинаковый номер картинки
           }
         }
 
-        // все ловушки имеют 4 элемента с одинаковыми картинками
-
-        this.finished = 1;
-        return;
+        if (fullTraps == 6 ||  // все ловушки заполнены правильно
+          (fullTraps > 0 && paramQuick)) { // или хоть одна + быстрый режим
+          this.stage = 1;
+          this.button.visible = true;
+        }
       }
 
       buildItems() {
@@ -581,6 +581,9 @@
           return;
         }
 
+        if (this.stage == 1) // собран, больше не перетаскиваем
+          return;
+
         let item = this.hitsItem(p.x, p.y);
         if (item != null) {
           // перенос в конец массива (в ближний слой)
@@ -659,7 +662,7 @@
         // рисуем кнопку
         this.button.draw();
 
-        if (info) {
+        if (paramInfo) {
           ctx.lineWidth = 2;
           ctx.strokeStyle = "red";
           ctx.strokeRect(mixArea.x, mixArea.y, mixArea.w, mixArea.h);
@@ -730,7 +733,7 @@
     });
 
     canvas.addEventListener("pointermove", (e) => {
-      mouseInfo.e = e; // debug
+      mouseInfo.e = e; // for debug info
       steps.map.pointermove(e);
 
     });
@@ -749,7 +752,7 @@
     }
 
     function drawInfo() {
-      if (!info)
+      if (!paramInfo)
         return;
 
       ctx.fillStyle = "black";
