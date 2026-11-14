@@ -285,13 +285,13 @@
         ctx.closePath();
         ctx.clip(); // применяем клип
       }
-
     }
+
 
     class TextMap {
       text = '';
       finished = 0;
-      button;
+      button = null;
 
       constructor(text, btnText = 'Далее') {
         this.text = text;
@@ -319,7 +319,10 @@
       }
 
       pointerdown(e) {
-        this.finished = 1;
+        const p = canvasPoint(e);
+        var obj = this.hitsObject(p.x, p.y);
+        if (obj == this.button)
+          this.finished = 1;
       }
 
       pointermove(e) {
@@ -343,11 +346,13 @@
       name = '?';
       finished = 0;
       items = null;
+      button = null;
       scenario;
 
       constructor(name, scenario) {
         this.name = name;
         this.scenario = scenario;
+        this.button = new Button(0.5 * canvas.width, 0.92 * canvas.height, 'Далее');
         this.buildItems();
         this.init();
       }
@@ -621,6 +626,8 @@
 
           ctx.restore(); // Восстанавливаем состояние
         }
+
+        this.button.draw();
       }
     }
 
