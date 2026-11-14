@@ -18,6 +18,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      background: #FFEB96;
     }
 
     canvas {
@@ -34,15 +35,8 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: white;
-      color: #e8eaed;
     }
-
-    canvas {
-      background: lightgray;
-      cursor: default;
-    }
- */
+    */
   </style>
 </head>
 
@@ -748,6 +742,10 @@
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "#FFEB96";
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+
       steps.map.draw();
     }
 
