@@ -18,7 +18,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background: #FFEB96;
+      background: #FFFAE8;
     }
 
     canvas {
@@ -52,9 +52,14 @@
     // ---------- global ----------
 
     const params = new URLSearchParams(window.location.search);
-    const paramNext = params.has('n');
-    const paramInfo = params.has('i');
-    const paramQuick = params.has('q');
+    let paramNext = params.has('n');
+    let paramInfo = params.has('i');
+    let paramQuick = params.has('q');
+
+    // debug
+    paramNext = false;
+    paramInfo = false;
+    paramQuick = true;
 
     // ---------- картинки ----------
 
@@ -131,6 +136,8 @@
       h: canvas.height
     };
 
+    const btnCenter = { x: canvas.width / 2, y: 0.92 * canvas.height };
+
     // ---------- картинки ----------
     const imageSources0 = [
       'img/0-0.jpg',
@@ -139,6 +146,7 @@
       'img/0-3.jpg',
       'img/0-4.jpg',
       'img/0-5.jpg',
+      'img/0-finish.jpg',
     ];
 
     const imageSources1 = [
@@ -148,6 +156,7 @@
       'img/1-3.jpg',
       'img/1-4.jpg',
       'img/1-5.jpg',
+      'img/1-finish.jpg',
     ];
 
     let images0 = null;
@@ -370,8 +379,7 @@
 
       constructor(text, btnText = 'Далее') {
         this.text = text;
-        let center = { x: canvas.width / 2, y: 0.92 * canvas.height };
-        this.button = new Button(center.x, center.y, btnText);
+        this.button = new Button(btnCenter.x, btnCenter.y, btnText);
         this.init();
       }
 
@@ -403,17 +411,15 @@
     }
 
     class PuzzleMap {
-      name = '';
       stage = 0; // 0 - не собран, 1 - собран
       finished = 0;
       items = null;
       button = null;
       scenario;
 
-      constructor(name, scenario) {
-        this.name = name;
+      constructor(scenario) {
         this.scenario = scenario;
-        this.button = new Button(0.5 * canvas.width, 0.92 * canvas.height, 'Далее');
+        this.button = new Button(btnCenter.x, btnCenter.y, 'Далее');
         this.buildItems();
         this.init();
       }
@@ -667,6 +673,109 @@
       }
     }
 
+
+    class FlipMap {
+      finished = 0;
+      scenario;
+      stage = 0; // 0 - анимация, 1 - анимация закончена
+
+      cx; cy;
+      baseH; baseW;
+      startTime = -1;
+      speed = 100; // pixel/sec
+
+      //calculated
+      x; y; w; h;
+
+      button = null;
+
+      constructor(scenario) {
+        this.scenario = scenario;
+        this.cx = trapArea.x + 0.5 * trapArea.w;
+        this.cy = trapArea.y + 0.5 * trapArea.h;
+        this.baseW = trapArea.w;
+        this.baseH = trapArea.h;
+        this.speed = 2.0 * this.baseH; // pixel/sec
+
+        this.button = new Button(btnCenter.x, btnCenter.y, 'Далее');
+
+        this.init();
+      }
+
+      init() {
+        this.finished = 0;
+        this.stage = 0;
+        this.startTime = -1;
+        this.button.visible = paramNext;
+      }
+
+      pointerdown(e) {
+        const p = canvasPoint(e);
+        if (this.button.mouseHit(p.x, p.y))
+          this.finished = 1;
+      }
+
+      pointermove(e) {
+      }
+
+      pointerup(e) {
+      }
+
+      pointercancel(e) {
+      }
+
+      calc(time) //ms
+      {
+        if (this.startTime < 0)
+          this.startTime = time; // самый первый шаг
+
+        // считаем изменение
+        const deltaTime = 0.001 * (time - this.startTime); //sec
+        const deltaH = - this.speed * deltaTime;
+
+        // новые размеры
+        const newH = this.baseH + deltaH;
+        if (newH < - this.baseH) { // полностью перевернули. стоп.
+          this.stage = 1;
+          this.button.visible = true;
+          return;
+        }
+
+        // считаем координаты
+        this.w = this.baseW;
+        this.x = this.cx - 0.5 * this.w;
+        this.h = newH;
+        this.y = this.cy - 0.5 * this.h;
+      }
+
+      draw(time) {
+        this.calc(time);
+
+        let image = null;
+
+        // debug
+        ctx.fillStyle = '#FFEB96';
+        ctx.fillRect(this.x, this.y, this.w, this.h);
+
+        if (this.h > 0) {
+          // image = ...
+        }
+        else {
+          if (this.scenario == 0)
+            image = images0[6];
+          else
+            image = images1[6];
+        }
+
+        if (image != null)
+          ctx.drawImage(image,
+            0, 0, image.width, image.height,
+            this.x, this.y, this.w, this.h);
+
+        this.button.draw();
+      }
+    }
+
     // ---------- steps ----------
 
     class Steps {
@@ -677,21 +786,26 @@
       constructor() {
         // создаём карты в нужном порядке:
 
+        this.maps.push(new FlipMap(0)); // debug
+        this.maps.push(new FlipMap(1)); // debug
+
         this.maps.push(new TextMap('Экологическая игра'));
 
         {
-          let m = new PuzzleMap('puzzle map (good)', 0);
+          let m = new PuzzleMap(0);
           this.maps.push(m);
         }
 
-        this.maps.push(new TextMap('Чистый светлый мир'));
+        this.maps.push(new FlipMap(0));
+        // this.maps.push(new TextMap('Чистый светлый мир'));
 
         {
-          let m = new PuzzleMap('puzzle map (bad)', 1);
+          let m = new PuzzleMap(1);
           this.maps.push(m);
         }
 
-        this.maps.push(new TextMap('Грязный унылый мир'));
+        this.maps.push(new FlipMap(1));
+        // this.maps.push(new TextMap('Грязный унылый мир'));
 
         this.maps.push(new TextMap('Отличный результат!', 'Начать сначала'));
 
@@ -707,7 +821,6 @@
         this.map = this.maps[this.current];
         this.map.init();
       }
-
     };
 
   </script>
@@ -741,16 +854,16 @@
       steps.map.pointercancel(e);
     });
 
-    function draw() {
+    function draw(time) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      ctx.fillStyle = "#FFEB96";
+      ctx.fillStyle = '#FFFAE8';
       ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-      steps.map.draw();
+      steps.map.draw(time);
     }
 
-    function drawInfo() {
+    function drawInfo(time) {
       if (!paramInfo)
         return;
 
@@ -786,20 +899,23 @@
       //   ctx.fillText(drag.active ? 'drag' : '', 5, y += dy);
 
       ctx.fillText(`steps.current: ${steps.current}`, 5, y += dy);
-      ctx.fillText(`steps.map.name: ${steps.map.name}`, 5, y += dy);
       ctx.fillText(`steps.map.finished: ${steps.map.finished}`, 5, y += dy);
 
+      ctx.fillText(`time= ${time}`, 5, y += dy);
+      // ctx.fillText(`startTime= ${controller.startTime}`, 5, y += dy);
+      // ctx.fillText(`controller= ${controller.x} ${controller.y} ${controller.w} ${controller.h}`, 5, y += dy);
     }
 
-    function loop() {
-      draw();
-      drawInfo();
+    function loop(time) {
+      draw(time);
+      drawInfo(time);
       if (steps.map.finished)
         steps.next();
       requestAnimationFrame(loop);
     }
 
-    loop();
+    requestAnimationFrame(loop);
+
   </script>
 </body>
 
