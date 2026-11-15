@@ -18,26 +18,16 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background: #FFFAE8;
+      background: #FFF5D2;
     }
 
     canvas {
       display: block;
       max-width: 100%;
       max-height: 100%;
-      /* border: 1px solid lightgray; */
       border: 0;
       touch-action: none;
     }
-
-    /* body {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-    */
   </style>
 </head>
 
@@ -57,9 +47,9 @@
     let paramQuick = params.has('q');
 
     // debug
-    paramNext = true;
-    paramInfo = false;
-    paramQuick = true;
+    // paramNext = true;
+    // paramInfo = false;
+    // paramQuick = true;
 
     // ---------- картинки ----------
 
@@ -149,6 +139,15 @@
       'img/0-finish.jpg',
     ];
 
+    const imageSources0c = [
+      'img/0-0c.jpg',
+      'img/0-1c.jpg',
+      'img/0-2c.jpg',
+      'img/0-3c.jpg',
+      'img/0-4c.jpg',
+      'img/0-5c.jpg',
+    ];
+
     const imageSources1 = [
       'img/1-0.jpg',
       'img/1-1.jpg',
@@ -159,15 +158,26 @@
       'img/1-finish.jpg',
     ];
 
+    const imageSources1c = [
+      'img/1-0c.jpg',
+      'img/1-1c.jpg',
+      'img/1-2c.jpg',
+      'img/1-3c.jpg',
+      'img/1-4c.jpg',
+      'img/1-5c.jpg',
+    ];
+
     let images0 = null;
+    let images0c = null;
     let images1 = null;
+    let images1c = null;
 
 
     // ---------- Item ----------
 
     class Item {
       x; y; w; h;
-      scenario;
+      scenario;  // 0 - good, 1 - bad
       num = 1;
       type = 't';
       image;
@@ -271,9 +281,18 @@
     // ---------- Trap ----------
 
     class Trap {
+      num;
+      scenario; // 0 - good, 1 - bad
+      image;
       x; y; w; h;
 
-      constructor(x, y) {
+      constructor(num, scenario, x, y) {
+        this.num = num;
+        this.scenario = scenario;
+        if (this.scenario == 0)
+          this.image = images0c[num];
+        else
+          this.image = images1c[num];
         this.x = x;
         this.y = y;
         this.w = side;
@@ -293,22 +312,9 @@
       draw() {
         ctx.save(); // Сохраняем состояние
 
-        // ctx.fillStyle = "lightgray";
-        // ctx.fillRect(trap.x, trap.y, trap.w, trap.h);
-
-        ctx.setLineDash([10, 5]); // Задаём пунктир: 10px линия, 5px пробел
-        ctx.strokeStyle = 'gray'; //'#000';
-        ctx.lineWidth = 2;
-
-        ctx.beginPath();
-        ctx.moveTo(this.x, this.y);
-        ctx.lineTo(this.x + this.w, this.y + this.w);
-        ctx.stroke();
-
-        ctx.beginPath();
-        ctx.moveTo(this.x + this.w, this.y);
-        ctx.lineTo(this.x, this.y + this.w);
-        ctx.stroke();
+        ctx.drawImage(this.image,
+          0, 0, 800, 800,
+          this.x, this.y, this.w, this.h);
 
         ctx.restore();
       }
@@ -415,12 +421,23 @@
       finished = 0;
       items = null;
       button = null;
+      traps = null;
       scenario;
 
       constructor(scenario) {
         this.scenario = scenario;
         this.button = new Button(btnCenter.x, btnCenter.y, 'Далее');
         this.buildItems();
+        this.traps = [
+          new Trap(0, this.scenario, trapArea.x + 0 * side, trapArea.y),
+          new Trap(1, this.scenario, trapArea.x + 1 * side, trapArea.y),
+          new Trap(2, this.scenario, trapArea.x + 2 * side, trapArea.y),
+
+          new Trap(3, this.scenario, trapArea.x + 0 * side, trapArea.y + side),
+          new Trap(4, this.scenario, trapArea.x + 1 * side, trapArea.y + side),
+          new Trap(5, this.scenario, trapArea.x + 2 * side, trapArea.y + side),
+        ];
+
         this.init();
       }
 
@@ -487,11 +504,12 @@
           // анализируем пойманные элементы
           if (trappedItems.length == 4) {
             // поймано 4 элемента
-            if (trappedItems[0].num == trappedItems[1].num &&
-              trappedItems[0].num == trappedItems[2].num &&
-              trappedItems[0].num == trappedItems[3].num
+            if (trap.num == trappedItems[1].num &&
+              trap.num == trappedItems[1].num &&
+              trap.num == trappedItems[2].num &&
+              trap.num == trappedItems[3].num
             ) {
-              // все элементы в ловушке имеют одинаковый номер картинки
+              // картинка ловушки совпала с картинками всех 4 элементов в ловушке
               // плюс одна полная ловушка
               fullTraps++;
             }
@@ -554,16 +572,6 @@
         }
       }
 
-      traps = [
-        new Trap(trapArea.x + 0 * side, trapArea.y),
-        new Trap(trapArea.x + 1 * side, trapArea.y),
-        new Trap(trapArea.x + 2 * side, trapArea.y),
-
-        new Trap(trapArea.x + 0 * side, trapArea.y + side),
-        new Trap(trapArea.x + 1 * side, trapArea.y + side),
-        new Trap(trapArea.x + 2 * side, trapArea.y + side),
-      ];
-
 
       drag = {
         active: false,
@@ -571,7 +579,6 @@
         offsetX: 0,
         offsetY: 0
       };
-
 
 
       pointerdown(e) {
@@ -640,7 +647,7 @@
 
         // пунктир на ловушках
         ctx.setLineDash([10, 5]); // Задаём пунктир: 10px линия, 5px пробел
-        ctx.strokeStyle = 'gray'; //'#000';
+        ctx.strokeStyle = 'gray';
         ctx.lineWidth = 2;
 
         ctx.beginPath();
@@ -748,29 +755,45 @@
         this.y = this.cy - 0.5 * this.h;
       }
 
+      drawTraps() {
+        let wx = this.w / 3;
+        let wy = this.h / 2;
+        let dx = wx;
+        let dy = wy;
+
+        let imgs = images0;
+        if (this.scenario == 1)
+          imgs = images1;
+
+        ctx.drawImage(imgs[0], this.x + 0 * dx, this.y + 0 * dy, wx, wy);
+        ctx.drawImage(imgs[1], this.x + 1 * dx, this.y + 0 * dy, wx, wy);
+        ctx.drawImage(imgs[2], this.x + 2 * dx, this.y + 0 * dy, wx, wy);
+
+        ctx.drawImage(imgs[3], this.x + 0 * dx, this.y + 1 * dy, wx, wy);
+        ctx.drawImage(imgs[4], this.x + 1 * dx, this.y + 1 * dy, wx, wy);
+        ctx.drawImage(imgs[5], this.x + 2 * dx, this.y + 1 * dy, wx, wy);
+      }
+
       draw(time) {
         this.calc(time);
-
-        let image = null;
 
         // debug
         ctx.fillStyle = '#FFEB96';
         ctx.fillRect(this.x, this.y, this.w, this.h);
 
-        if (this.h > 0) {
-          // image = ...
+        if (this.h > 0) { // сторона с элементами
+          this.drawTraps();
         }
-        else {
+        else { // обратная сторона с результатом
+          let image = null;
+
           if (this.scenario == 0)
             image = images0[6];
           else
             image = images1[6];
-        }
 
-        if (image != null)
-          ctx.drawImage(image,
-            0, 0, image.width, image.height,
-            this.x, this.y, this.w, this.h);
+          ctx.drawImage(image, this.x, this.y, this.w, this.h);
+        }
 
         this.button.draw();
       }
@@ -786,8 +809,8 @@
       constructor() {
         // создаём карты в нужном порядке:
 
-        this.maps.push(new FlipMap(0)); // debug
-        this.maps.push(new FlipMap(1)); // debug
+        // this.maps.push(new FlipMap(0)); // debug
+        // this.maps.push(new FlipMap(1)); // debug
 
         this.maps.push(new TextMap('Экологическая игра'));
 
@@ -827,7 +850,9 @@
 
   <script type="module">
     images0 = await loadImages(imageSources0);
+    images0c = await loadImages(imageSources0c); // контуры
     images1 = await loadImages(imageSources1);
+    images1c = await loadImages(imageSources1c); // контуры
 
     const steps = new Steps();
 
@@ -857,7 +882,7 @@
     function draw(time) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      ctx.fillStyle = '#FFFAE8';
+      ctx.fillStyle = '#FFF5D2';
       ctx.fillRect(0, 0, canvas.width, canvas.height)
 
       steps.map.draw(time);
