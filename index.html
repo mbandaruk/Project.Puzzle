@@ -57,7 +57,7 @@
     let paramQuick = params.has('q');
 
     // debug
-    paramNext = false;
+    paramNext = true;
     paramInfo = false;
     paramQuick = true;
 
@@ -706,7 +706,7 @@
         this.finished = 0;
         this.stage = 0;
         this.startTime = -1;
-        this.button.visible = paramNext;
+        this.button.visible = false;
       }
 
       pointerdown(e) {
