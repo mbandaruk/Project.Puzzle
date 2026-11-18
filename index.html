@@ -26,6 +26,7 @@
       max-width: 100%;
       max-height: 100%;
       border: 0;
+      /* border: 1px solid lightgray; */
       touch-action: none;
     }
   </style>
@@ -102,12 +103,12 @@
     }
 
     const indent = canvas.height * 0.01; // отступ от края
-    const side = (0.30 * canvas.height); // основание треугольника
+    const side = (0.34 * canvas.height); // основание треугольника
 
     // место сборки (ловушки)
     const trapArea = {
       x: canvas.width / 2 - 1.5 * side,
-      y: canvas.height / 2 - side + 0.15 * side,
+      y: canvas.height / 2 - side + 0.0 * side,
       w: 3 * side, h: 2 * side
     };
 
@@ -126,7 +127,9 @@
       h: canvas.height
     };
 
-    const btnCenter = { x: canvas.width / 2, y: 0.92 * canvas.height };
+    let btnAreaTop = (trapArea.y + trapArea.h);
+    let btnAreaH = canvas.height - btnAreaTop;
+    const btnCenter = { x: canvas.width / 2, y: btnAreaTop + 0.5 * btnAreaH };
 
     // ---------- картинки ----------
     const imageSources0 = [
